@@ -1,5 +1,5 @@
-import useForm from "reform/useForm";
-import Form from "reform/useFormContext";
+import useForm from "../src/reform/useForm";
+import Form from "../src/reform/useFormContext";
 
 export default useForm;
 
@@ -10,10 +10,10 @@ export {
     FieldConstraints,
     FieldState,
     getFieldState,
-} from "./reform/useForm"
+} from "../src/reform/useForm"
 
 export {
     useFormContext,
-} from "reform/useFormContext"
+} from "../src/reform/useFormContext"
 
 export { Form }
