@@ -1,5 +1,5 @@
 {
-  "name": "@dsid-opcoatlas/atlas-reform",
+  "name": "@dsid-opcoatlas/reform",
   "version": "1.0.0",
   "description": "Yet another React form library",
   "private": false,
@@ -23,15 +23,16 @@
   "author": "Franck Wolff <franck.wolff@4riders.net>",
   "scripts": {
     "build": "tsup src/index.ts",
-    "build:release": "env NODE_ENV=release tsup src/index.ts",
-    "start": "npm run build -- --watch"
+    "start": "npm run build -- --watch",
+    "prepublishOnly": "env NODE_ENV=release tsup src/index.ts"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "@dsid-opcoatlas/yop": "^1.0.0"
   },
   "devDependencies": {
     "@swc/core": "^1.3.44",

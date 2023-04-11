@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useRef, useState } from "react"
 import { get, set, cloneDeep, toPath, isEqual } from "lodash"
 import useRender from "./useRender"
-import { ObjectSchema, ValidationError } from "atlas-yop"
+import { ObjectSchema, ValidationError } from "@dsid-opcoatlas/yop"
 
 type ResetConfiguration = {
     initialValues?: boolean
