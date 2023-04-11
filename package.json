@@ -5,6 +5,7 @@
   "private": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "license": "MIT",
   "homepage": "https://github.com/Service-SI-OPCO-Atlas/atlas-reform#readme",
   "repository": {
@@ -30,8 +31,7 @@
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "dependencies": {
-    "lodash": "^4.17.21",
-    "atlas-yop": "file:../atlas-yop"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@swc/core": "^1.3.44",
