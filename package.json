@@ -1,5 +1,5 @@
 {
-  "name": "atlas-reform",
+  "name": "@dsid-opcoatlas/atlas-reform",
   "version": "1.0.0",
   "description": "Yet another React form library",
   "private": false,
