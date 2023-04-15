@@ -1,12 +1,5 @@
-import { useCallback, useState } from "react"
+import { useReducer } from "react"
 
-export default function useRender() {
-
-    const [, updateState] = useState({})
-    
-    const render = useCallback(() => {
-        updateState({})
-    }, [])
-
-    return render
+export function useRender(): () => void {
+    return useReducer(() => ({}), {})[1] as () => void
 }

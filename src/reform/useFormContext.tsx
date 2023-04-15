@@ -12,7 +12,7 @@ interface FormProps<T extends object> extends Omit<FormHTMLAttributes<HTMLFormEl
     disabled?: boolean
 }
 
-export default function Form<T extends object>(props: FormProps<T>) {
+export function Form<T extends object>(props: FormProps<T>) {
     const { context, children, ...formAttrs } = props
 
     return (

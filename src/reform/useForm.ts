@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useRef, useState } from "react"
 import { get, set, cloneDeep, toPath, isEqual } from "lodash"
-import useRender from "./useRender"
+import { useRender } from "./useRender"
 import { ObjectSchema, ValidationError } from "@dsid-opcoatlas/yop"
 
 type ResetConfiguration = {
@@ -100,7 +100,7 @@ export function getFieldState<S>(context: UseFormReturn<any>, path: string): Fie
     }
 }
 
-export default function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn<T> {
+export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn<T> {
 
     const renderForm = useRender()
 
