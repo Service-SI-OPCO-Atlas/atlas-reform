@@ -7,6 +7,7 @@ import { InputAttributes, ReformEvents } from "./InputHTMLProps"
 export interface InputSelection {
     start: number | null
     end: number | null
+    direction?: "forward" | "backward" | "none"
 }
 
 export type BaseTextFieldHTMLAttributes = Omit<InputAttributes<'text' | 'password'>,
@@ -22,59 +23,68 @@ export type BaseTextFieldHTMLAttributes = Omit<InputAttributes<'text' | 'passwor
 >
 
 export type BaseTextFieldProps<T extends object, V = string> = BaseTextFieldHTMLAttributes & ReformEvents<V, T> & {
-    convertInputValue?: (value: string) => V | null
-    convertModelValue?: (value: V | null) => string
-    formatDisplayedValue?: (value: string) => string
-    formatOnInput?: boolean
+    toModelValue?: (value: string) => V | null
+    toTextValue?: (value: V | null) => string
     acceptInputValue?: (value: string) => boolean
+    formatDisplayedValue?: (value: string) => string
+    formatOnEdit?: boolean
     render: () => void
 }
 
 export function BaseTextField<T extends object, V = string>(props: BaseTextFieldProps<T, V>) {
 
-    const { onChange, onBlur, convertInputValue, convertModelValue, formatDisplayedValue, formatOnInput, acceptInputValue, render, ...inputProps } = props
+    const { onChange, onBlur, toModelValue, toTextValue, acceptInputValue, formatDisplayedValue, formatOnEdit, render, ...inputProps } = props
     const context = useFormContext<T>()
     const fieldState = getFieldState<V>(context, props.name)
 
     const inputRef = useRef<HTMLInputElement>(null)
     const previousInputValue = useRef('')
-    const previousInputSelection = useRef<InputSelection>({ start: null, end: null})
+    const previousInputSelection = useRef<InputSelection>({ start: null, end: null })
 
-    const getInputValue = (input: HTMLInputElement) => {
-        if (convertInputValue)
-            return convertInputValue(input.value)
-        return input.value === '' ? null : input.value as V
+    const getInputValue = (event: React.SyntheticEvent<HTMLInputElement>) => {
+        const value = event.currentTarget.value
+        if (toModelValue)
+            return toModelValue(value)
+        return value === '' ? null : value as V
     }
 
     const internalOnSelect = (event: React.FormEvent<HTMLInputElement>) => {
+        const target = event.currentTarget
+        
         previousInputSelection.current = {
-            start: event.currentTarget.selectionStart,
-            end: event.currentTarget.selectionEnd
+            start: target.selectionStart,
+            end: target.selectionEnd,
+            direction: target.selectionDirection ?? undefined
         }
-
-        if (formatOnInput !== false && formatDisplayedValue && event.currentTarget.selectionStart === event.currentTarget.value.length) {
-            const formattedValue = formatDisplayedValue(event.currentTarget.value)
-            if (event.currentTarget.value !== formattedValue)
-                event.currentTarget.value = formattedValue
+        
+        // format displayed value when cursor is moved at the end of typed text
+        if (formatOnEdit  !== false && formatDisplayedValue && target.selectionStart === target.value.length) {
+            const formattedValue = formatDisplayedValue(target.value)
+            if (target.value !== formattedValue)
+                target.value = formattedValue
         }
     }
 
     const internalOnInput = (event: React.FormEvent<HTMLInputElement>) => {
-        if (acceptInputValue?.(event.currentTarget.value) === false) {
-            event.currentTarget.value = previousInputValue.current
-            event.currentTarget.setSelectionRange(previousInputSelection.current!.start, previousInputSelection.current!.end)
+        const target = event.currentTarget
+        
+        // Discard changes if it doesn't conform to acceptInputValue (could also be handled by a beforeInput event)
+        if (acceptInputValue?.(target.value) === false) {
+            target.value = previousInputValue.current
+            const selection = previousInputSelection.current!
+            target.setSelectionRange(selection.start, selection.end, selection.direction)
         }
-        else if (formatOnInput !== false && formatDisplayedValue && event.currentTarget.selectionStart === event.currentTarget.value.length) {
-            const formattedValue = formatDisplayedValue(event.currentTarget.value) ?? event.currentTarget.value
-            if (event.currentTarget.value !== formattedValue)
-                event.currentTarget.value = formattedValue
+        // format displayed value when cursor is at the end of typed text
+        else if (formatOnEdit !== false && formatDisplayedValue && target.selectionStart === target.value.length) {
+            const formattedValue = formatDisplayedValue(target.value)
+            if (target.value !== formattedValue)
+                target.value = formattedValue
         }
     }
 
     const internalOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         previousInputValue.current = event.currentTarget.value
-        
-        const value = getInputValue(event.currentTarget)
+        const value = getInputValue(event)
         if (value !== fieldState.value) {
             context.setValue(props.name, value)
             context.validateAt(props.name) && render()
@@ -83,14 +93,15 @@ export function BaseTextField<T extends object, V = string>(props: BaseTextField
     }
 
     const internalOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-        const value = getInputValue(event.currentTarget)
+        const value = getInputValue(event)
         context.setValue(props.name, value, true)
         onBlur?.(value, context)
     }
 
+    // If this is the first render or if this input isn't currently edited
     if (inputRef.current == null || inputRef.current !== document.activeElement) {
-        const convertedValue = convertModelValue?.(fieldState.value) ?? (fieldState.value != null ? String(fieldState.value) : '')
-        const value = formatDisplayedValue ? formatDisplayedValue(convertedValue) : convertedValue
+        const convertedValue = toTextValue?.(fieldState.value) ?? String(fieldState.value ?? '')
+        const value = formatDisplayedValue?.(convertedValue) ?? convertedValue
         if (inputRef.current)
             inputRef.current.value = value
         else
