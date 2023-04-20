@@ -1,5 +1,4 @@
 import React, { InputHTMLAttributes, useRef } from "react"
-import { useRender } from "../useRender"
 import { useFormContext } from "../useFormContext"
 import { getFieldState } from "../useForm"
 import { InputAttributes, ReformEvents } from "./InputHTMLProps"
