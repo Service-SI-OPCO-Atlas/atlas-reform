@@ -32,10 +32,10 @@
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
+    "react-dom": "^17.0.0 || ^18.0.0",
+    "@dsid-opcoatlas/yop": "^1.0.1"
   },
   "dependencies": {
-    "@dsid-opcoatlas/yop": "^1.0.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
@@ -45,6 +45,7 @@
     "@types/node": "^18.15.11",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
+    "@dsid-opcoatlas/yop": "^1.0.1",
     "tsup": "^6.7.0",
     "typescript": "^5.0.2"
   }
