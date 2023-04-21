@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@dsid-opcoatlas/yop@^1.0.1":
+"@dsid-opcoatlas/yop@>=1.0":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-1.0.1.tgz#b09ec5f66126a0b12f42b38b9d8f8f08c90c4b02"
   integrity sha512-2ooaF97+d29kDuNQeq7XE9xmcrdNaFOQT1R7VR1V9YfWuf5cYGIKpKNBG1/CCOSxoO3XZjVyHhXIwm4fIYut8g==

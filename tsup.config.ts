@@ -9,7 +9,7 @@ export default defineConfig({
     clean: false, /* cleaning output directory causes issues with yarn link and webpack dev server */
     minify: env === 'release',
     format: [ 'esm' ],
-    external: [ 'react', 'react-dom', 'lodash' ],
+    external: [ 'react', 'react-dom', 'lodash', '@dsid-opcoatlas/yop' ],
     outExtension() {
         return {
             js: '.js',
