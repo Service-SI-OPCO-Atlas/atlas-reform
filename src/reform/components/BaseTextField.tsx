@@ -15,18 +15,31 @@ export type BaseTextFieldHTMLAttributes = Omit<InputAttributes<'text' | 'passwor
     'capture' |
     'height' |
     'multiple' |
-    'min' |
     'max' |
+    'min' |
+    'multiple' |
+    'src' |
     'step' |
     'width'
 >
 
-export type BaseTextFieldProps<T extends object, V = string> = BaseTextFieldHTMLAttributes & ReformEvents<V, T> & {
+export type BaseTextFieldProps<T extends object, V> = BaseTextFieldHTMLAttributes & ReformEvents<V, T> & {
     toModelValue?: (value: string) => V | null
     toTextValue?: (value: V | null) => string
     acceptInputValue?: (value: string) => boolean
     formatDisplayedValue?: (value: string) => string
     formatOnEdit?: boolean
+
+    /**
+     * Method to re-render this `BaseTextField` together with its parent component.
+     * 
+     * You can use {@link useRender} in the parent component:
+     * ```
+     * const render = useRender()
+     * ...
+     * return <BaseTextField render={ render } ... />
+     * ```
+     */
     render: () => void
 }
 
@@ -34,7 +47,7 @@ export function BaseTextField<T extends object, V = string>(props: BaseTextField
 
     const { onChange, onBlur, toModelValue, toTextValue, acceptInputValue, formatDisplayedValue, formatOnEdit, render, ...inputProps } = props
     const context = useFormContext<T>()
-    const fieldState = getFieldState<V>(context, props.name)
+    const fieldState = getFieldState<V | null>(context, props.name)
 
     const inputRef = useRef<HTMLInputElement>(null)
     const previousInputValue = useRef('')
