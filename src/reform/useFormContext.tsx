@@ -21,8 +21,18 @@ export function Form<T extends object>(props: FormProps<T>) {
                 <fieldset disabled={ props.disabled }>{ children }</fieldset>
                 
                 { context.errors.size > 0 && process.env.NODE_ENV === 'development' &&
-                <div className="m-formError" style={{ marginTop: "1em" }}>
-                    <pre className="m-formError__title">Validation errors: { JSON.stringify(Object.fromEntries(context.errors), null, 4) }</pre>
+                <div style={{
+                    all: "initial",
+                    display: "block",
+                    marginTop: "1em",
+                    padding: "1em",
+                    fontFamily: "monospace",
+                    border: "2px solid firebrick",
+                    color: "firebrick",
+                    background: "white",
+                    whiteSpace: "pre"
+                }}>
+                    Validation errors: { JSON.stringify(Object.fromEntries(context.errors), null, 4) }
                 </div>
                 }
             </form>
