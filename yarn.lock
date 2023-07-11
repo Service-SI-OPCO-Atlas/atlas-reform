@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@dsid-opcoatlas/yop@>=1.0":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-1.0.1.tgz#b09ec5f66126a0b12f42b38b9d8f8f08c90c4b02"
-  integrity sha512-2ooaF97+d29kDuNQeq7XE9xmcrdNaFOQT1R7VR1V9YfWuf5cYGIKpKNBG1/CCOSxoO3XZjVyHhXIwm4fIYut8g==
+"@dsid-opcoatlas/yop@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-1.0.3.tgz#71a41dae8771091befa976c34d1dd71273446294"
+  integrity sha512-p7djsPVBbsIDoloWhtDEeL2fpqBvTznC9vk05GoaiJY5/1uzu977ShGiQEuaFK9n5Vowd/q14j8j5ZS46Y79qg==
 
 "@esbuild/android-arm64@0.17.15":
   version "0.17.15"
