@@ -43,8 +43,8 @@ export type UseFormReturn<T extends object> = {
 
 export type FieldConstraints = {
     required: boolean
-    min?: number | Date
-    max?: number | Date
+    min?: number | Date | string
+    max?: number | Date | string
 }
 
 export type FieldState<T> = {
