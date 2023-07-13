@@ -1,6 +1,6 @@
 {
   "name": "@dsid-opcoatlas/reform",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Yet another React form library",
   "private": false,
   "main": "dist/index.js",
