@@ -28,6 +28,7 @@ export type UseFormReturn<T extends object> = {
     formRef: React.MutableRefObject<HTMLFormElement | null>
     formRefCallback: (form: HTMLFormElement | null) => void
     setValue: (path: string, value: any, commit?: boolean, touch?: boolean) => void
+    setValues: (values: T) => void
     getValue: (path: string) => any
     reset: (initialValues?: boolean) => void
     resetValidationAt: (path: string) => void
@@ -232,9 +233,21 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
     }
 
     const setValue = (path: string, value: any, commit = false, touch = false) => {
-        set(valuesRef.current, path, value)
-        if (commit || touch || getError(path) !== undefined)
-            touchedRef.current.add(path)
+        if (path === '')
+            setValues(value, commit)
+        else {
+            set(valuesRef.current, path, value)
+            if (commit || touch || getError(path) !== undefined)
+                touchedRef.current.add(path)
+            if (commit) {
+                validate()
+                renderForm()
+            }
+        }
+    }
+
+    const setValues = (values: T, commit = true) => {
+        valuesRef.current = cloneDeep(values)
         if (commit) {
             validate()
             renderForm()
@@ -255,6 +268,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
         formRef,
         formRefCallback,
         setValue,
+        setValues,
         getValue,
         reset,
         resetValidationAt,
