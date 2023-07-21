@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useRef, useState } from "react"
-import { get, set, cloneDeep, toPath, isEqual } from "lodash"
+import { get, set, cloneDeep, toPath, isEqual, PropertyPath } from "lodash"
 import { useRender } from "./useRender"
 import { ObjectSchema, ValidationError } from "@dsid-opcoatlas/yop"
 
@@ -17,7 +17,7 @@ export type UseFormProps<T extends object> = {
 }
 
 export type ReformContext = {
-    isTouched: (path: string) => boolean
+    isTouched: (path?: string) => boolean
     submitted: boolean
     submitting: boolean
     getError: (path: string) => ValidationError | undefined
@@ -37,7 +37,6 @@ export type UseFormReturn<T extends object> = {
     setSubmitting: (value: boolean) => void
     values: T | null
     errors: Map<string, ValidationError>
-    touched: Set<string>
     validateAt: (path: string, touchedOnly?: boolean) => boolean
     renderForm: () => void
 } & UseFormProps<T> & ReformContext
@@ -75,7 +74,7 @@ const clearPath = (path: string[], collection: Map<string, any> | Set<string>) =
 const includesPath = (path: string[], collection: Set<string>) => {
     const array = Array.from(collection)
     for (let value of array) {
-        if (arrayStartsWith(toPath(value), path))
+        if (value.length === 0 || arrayStartsWith(toPath(value), path))
             return true
     }
     return false
@@ -109,7 +108,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
     const initialValuesRef = useRef<T | null>(null)    
     const valuesRef = useRef<T>({} as T)
     const errorsRef = useRef(new Map<string, ValidationError>())
-    const touchedRef = useRef(new Set<string>())
+    const touchedRef = useRef<object | true>({})
     const submittedRef = useRef(false)
     const [submitting, setSubmitting] = useState(false)
     const resetDepsRef = useRef<ResetConfiguration>()
@@ -126,7 +125,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
 
     const reset = (initialValues = true) => {
         errorsRef.current.clear()
-        touchedRef.current.clear()
+        touchedRef.current = {}
         setSubmitting(false)
         submittedRef.current = false
 
@@ -143,8 +142,44 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
         formRef.current = form
     }, [])
 
-    const isTouched = (path: string) => {
-        return touchedRef.current.has(path) || includesPath(toPath(path), touchedRef.current)
+    const setTouched = (path?: string | string[]) => {
+        if (touchedRef.current !== true) {
+            if (path == null || path.length === 0)
+                touchedRef.current = true
+            else
+                set(touchedRef.current, path, true)
+        }
+    }
+
+    const setUntouched = (path?: string | string[]) => {
+        if (path == null || path.length === 0)
+            touchedRef.current = {}
+        else if (touchedRef.current !== true) {
+            path = Array.isArray(path) ? path.slice() : toPath(path)
+            while (path.length > 0) {
+                const last = path.pop()!
+                const parent = path.length === 0 ? touchedRef.current : get(touchedRef.current, path)
+                if (parent == null)
+                    break
+                delete parent[last]
+                if ((Array.isArray(parent) && parent.some(e => e != null)) || Object.keys(parent).length > 0)
+                    break
+            }
+        }
+    }
+
+    const isTouched = (path?: string) => {
+        if (touchedRef.current === true)
+            return true
+        if (path != null && path !== "") {
+            const pathSegments = toPath(path)
+            while (pathSegments.length > 0) {
+                if (get(touchedRef.current, pathSegments) === true)
+                    return true
+                pathSegments.pop()
+            }
+        }
+        return false
     }
 
     const isDirty = (path?: string) => {
@@ -200,7 +235,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
     const resetValidationAt = (path: string) => {
         const pathSegments = toPath(path)
         clearPath(pathSegments, errorsRef.current)
-        clearPath(pathSegments, touchedRef.current)
+        setUntouched(pathSegments)
     }
 
     const resetToInitialValueAt = (path: string) => {
@@ -238,7 +273,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
         else {
             set(valuesRef.current, path, value)
             if (commit || touch || getError(path) !== undefined)
-                touchedRef.current.add(path)
+                setTouched(path)
             if (commit) {
                 validate()
                 renderForm()
@@ -249,6 +284,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
     const setValues = (values: T, commit = true) => {
         valuesRef.current = cloneDeep(values)
         if (commit) {
+            setTouched()
             validate()
             renderForm()
         }
@@ -260,7 +296,7 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
 
     if (!isEqual(props.initialValues ?? null, initialValuesRef.current)) {
         initialValuesRef.current = props.initialValues ?? null
-        if (touchedRef.current.size === 0)
+        if (Object.keys(touchedRef.current).length === 0)
             valuesRef.current = cloneInitialValues()
     }
 
@@ -280,7 +316,6 @@ export function useForm<T extends object>(props: UseFormProps<T>): UseFormReturn
         values: valuesRef.current,
         errors: errorsRef.current,
         getError,
-        touched: touchedRef.current,
         isTouched,
         isDirty,
         validateAt,
