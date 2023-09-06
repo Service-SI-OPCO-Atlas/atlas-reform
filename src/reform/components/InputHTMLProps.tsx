@@ -1,7 +1,32 @@
 import { DOMAttributes, InputHTMLAttributes } from "react"
 import { UseFormReturn } from "../useForm"
 
-export type InputAttributes<InputType extends React.HTMLInputTypeAttribute> = (
+type HTMLInputTypeAttribute =
+        | 'button'
+        | 'checkbox'
+        | 'color'
+        | 'date'
+        | 'datetime-local'
+        | 'email'
+        | 'file'
+        | 'hidden'
+        | 'image'
+        | 'month'
+        | 'number'
+        | 'password'
+        | 'radio'
+        | 'range'
+        | 'reset'
+        | 'search'
+        | 'submit'
+        | 'tel'
+        | 'text'
+        | 'time'
+        | 'url'
+        | 'week'
+        | (string & {});
+
+export type InputAttributes<InputType extends HTMLInputTypeAttribute> = (
     Omit<InputHTMLAttributes<HTMLInputElement>,
         // HTMLAttributes
         'name' |

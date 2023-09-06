@@ -8,7 +8,8 @@ export default defineConfig({
     sourcemap: true,
     clean: false, /* cleaning output directory causes issues with yarn link and webpack dev server */
     minify: env === 'release',
-    format: [ 'esm' ],
+    target: "es6",
+    format: [ 'esm', 'cjs' ],
     external: [ 'react', 'react-dom', 'lodash', '@dsid-opcoatlas/yop' ],
     outExtension() {
         return {
