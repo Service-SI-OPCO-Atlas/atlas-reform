@@ -11,9 +11,4 @@ export default defineConfig({
     target: "es6",
     format: [ 'esm', 'cjs' ],
     external: [ 'react', 'react-dom', 'lodash', '@dsid-opcoatlas/yop' ],
-    outExtension() {
-        return {
-            js: '.js',
-        }
-    },
 })

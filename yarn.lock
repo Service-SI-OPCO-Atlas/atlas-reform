@@ -311,10 +311,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@dsid-opcoatlas/yop@1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-1.0.3.tgz#71a41dae8771091befa976c34d1dd71273446294"
-  integrity sha512-p7djsPVBbsIDoloWhtDEeL2fpqBvTznC9vk05GoaiJY5/1uzu977ShGiQEuaFK9n5Vowd/q14j8j5ZS46Y79qg==
+"@dsid-opcoatlas/yop@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-1.1.1.tgz#5cfd55de0ed1a2cb4ea3e25b696a7da2bf9aa592"
+  integrity sha512-hE6CjcfsL/TUZ/Dzep0p1Rc5lD9+zBRTcV4CHEINWgh3A776jMmZXgf72LD7hjzMl9DyqHVnQFntnonOeSrSGw==
 
 "@esbuild/android-arm64@0.18.20":
   version "0.18.20"

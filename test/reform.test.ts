@@ -61,7 +61,7 @@ describe('test.reform', () => {
         expect(result.current.getErrorCount()).toEqual(0)
 
         await act(async () => {
-            await result.current.setValue("person.friends[0].firstname", "Jim", true)
+            await result.current.setValue("person.friends[0].firstname", "Jim", "touch & validate")
         })
         expect(result.current.isDirty()).toBe(true)
         expect(result.current.isTouched("person")).toBe(true)
@@ -77,7 +77,7 @@ describe('test.reform', () => {
         expect(result.current.getErrorCount()).toEqual(0)
 
         await act(async () => {
-            await result.current.setValue("person.friends[1].firstname", null, true)
+            await result.current.setValue("person.friends[1].firstname", null, "touch")
             await result.current.setValue("person.friends[1].age", -1, true)
         })
         expect(result.current.isDirty()).toBe(true)
@@ -92,8 +92,27 @@ describe('test.reform', () => {
         expect(result.current.isTouched("person.friends[1].firstname")).toBe(true)
         expect(result.current.isTouched("person.friends[1].age")).toBe(true)
         expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[1].firstname")).not.toBeNull()
-        expect(result.current.getError("person.friends[1].age")).not.toBeNull()
+        expect(result.current.getError("person.friends[1].firstname")).not.toBeUndefined()
+        expect(result.current.getError("person.friends[1].age")).not.toBeUndefined()
+
+        await act(async () => {
+            await result.current.setValue("person.friends[1].firstname", null, "untouch & validate")
+        })
+
+        expect(result.current.isDirty()).toBe(true)
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(true)
+        expect(result.current.isTouched("person.age")).toBe(false)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.friends[0]")).toBe(true)
+        expect(result.current.isTouched("person.friends[0].firstname")).toBe(true)
+        expect(result.current.isTouched("person.friends[0].age")).toBe(false)
+        expect(result.current.isTouched("person.friends[1]")).toBe(true)
+        expect(result.current.isTouched("person.friends[1].firstname")).toBe(false)
+        expect(result.current.isTouched("person.friends[1].age")).toBe(true)
+        expect(result.current.getErrorCount()).toEqual(1)
+        expect(result.current.getError("person.friends[1].firstname")).toBeUndefined()
+        expect(result.current.getError("person.friends[1].age")).not.toBeUndefined()
     })
 
     test('test.array', async () => {
@@ -142,11 +161,11 @@ describe('test.reform', () => {
         expect(result.current.getErrorCount()).toEqual(0)
 
         await act(async () => {
-            await result.current.setValue("person.friends[0].firstname", "Joe", false, true)
-            await result.current.setValue("person.friends[0].age", -1, false, true)
-            await result.current.setValue("person.friends[1].firstname", "Mike", false, true)
-            await result.current.setValue("person.friends[2].firstname", null, false, true)
-            await result.current.setValue("person.friends[2].age", 24, false, true)
+            await result.current.setValue("person.friends[0].firstname", "Joe", "touch")
+            await result.current.setValue("person.friends[0].age", -1, "touch")
+            await result.current.setValue("person.friends[1].firstname", "Mike", "touch")
+            await result.current.setValue("person.friends[2].firstname", null, "touch")
+            await result.current.setValue("person.friends[2].age", 24, "touch")
             await result.current.setValue("person.friends[3].firstname", "Jim", true)
         })
 
