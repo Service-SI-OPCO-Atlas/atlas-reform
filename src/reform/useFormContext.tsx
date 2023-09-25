@@ -20,7 +20,7 @@ export function Form<T extends object>(props: FormProps<T>) {
             <form ref={ context.formRefCallback } onSubmit={ (e) => context.submit(e, context) } { ...formAttrs }>
                 <fieldset disabled={ props.disabled }>{ children }</fieldset>
                 
-                {/* { context.errors.size > 0 && process.env.NODE_ENV === 'development' &&
+                { context.getErrorCount() > 0 && process.env.NODE_ENV === 'development' &&
                 <div style={{
                     all: "initial",
                     display: "block",
@@ -32,9 +32,9 @@ export function Form<T extends object>(props: FormProps<T>) {
                     background: "white",
                     whiteSpace: "pre"
                 }}>
-                    Validation errors: { JSON.stringify(Object.fromEntries(context.errors), null, 4) }
+                    Validation errors: { JSON.stringify(Object.fromEntries(context.getErrorPaths().map(path => ([ path, context.getError(path) ]))), null, 4) }
                 </div>
-                } */}
+                }
             </form>
         </FormContext.Provider>
     )

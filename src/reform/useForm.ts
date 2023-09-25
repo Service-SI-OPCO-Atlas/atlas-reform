@@ -36,9 +36,7 @@ export function reformContext(context: ValidationContext<any>) {
     return context.userContext as ReformContext
 }
 
-export type UseFormReturn<T extends object> = {
-    formRef: React.MutableRefObject<HTMLFormElement | null>
-    formRefCallback: (form: HTMLFormElement | null) => void
+export type FormManagerContext<T extends object> = {
     setValue: (path: string, value: any, commit?: boolean | SetValueOption) => void
     setValues: (values: T, commit?: boolean | SetValueOption) => void
     getValue: (path: string) => any
@@ -53,6 +51,11 @@ export type UseFormReturn<T extends object> = {
     validateAt: (path: string, touchedOnly?: boolean) => boolean
     renderForm: () => void
 } & UseFormProps<T> & ReformContext
+
+export type UseFormReturn<T extends object> = FormManagerContext<T> & {
+    formRef: React.MutableRefObject<HTMLFormElement | null>
+    formRefCallback: (form: HTMLFormElement | null) => void
+}
 
 export type FieldConstraints = {
     required: boolean

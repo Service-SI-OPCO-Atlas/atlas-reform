@@ -3,7 +3,7 @@ import { AsyncResultsHolder } from "./holders/AsyncResultsHolder"
 import { ErrorsHolder } from "./holders/ErrorsHolder"
 import { TouchedHolder } from "./holders/TouchedHolder"
 import { ValuesHolder } from "./holders/ValuesHolder"
-import { ResetConfiguration, UseFormProps, UseFormReturn } from "./useForm"
+import { FormManagerContext, ReformContext, ResetConfiguration, UseFormProps, UseFormReturn } from "./useForm"
 import { AsyncValidationStatus, ValidationError } from "@dsid-opcoatlas/yop"
 import { FormEvent } from "react"
 
@@ -405,7 +405,7 @@ export class FormManager<T extends object> {
         }
     }
     
-    userContext() {
+    userContext(): ReformContext {
         return {
             ...this.touched.userContext(),
             ...this.errors.userContext(),
@@ -417,10 +417,11 @@ export class FormManager<T extends object> {
             asyncValidating: this.formState.asyncValidating,
             isDirty: this.isDirty.bind(this),
             hasChanged: this.hasChanged.bind(this),
+            setAsyncResultPending: this.setAsyncResultPending.bind(this),
         }
     }
 
-    formContext() {
+    formContext(): FormManagerContext<T> {
         return {
             ...this.touched.formContext(),
             ...this.errors.formContext(),
