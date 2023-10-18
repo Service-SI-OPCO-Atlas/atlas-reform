@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks'
 import { useForm } from '../src/reform/useForm'
 import { Yop } from '@dsid-opcoatlas/yop'
+import { SetValueOptions } from '../src/reform/FormManager'
 
 describe('test.reform', () => {
 
@@ -61,7 +62,7 @@ describe('test.reform', () => {
         expect(result.current.getErrorCount()).toEqual(0)
 
         await act(async () => {
-            await result.current.setValue("person.friends[0].firstname", "Jim", "touch & validate")
+            await result.current.setValue("person.friends[0].firstname", "Jim", SetValueOptions.Touch | SetValueOptions.Validate)
         })
         expect(result.current.isDirty()).toBe(true)
         expect(result.current.isTouched("person")).toBe(true)
@@ -77,7 +78,7 @@ describe('test.reform', () => {
         expect(result.current.getErrorCount()).toEqual(0)
 
         await act(async () => {
-            await result.current.setValue("person.friends[1].firstname", null, "touch")
+            await result.current.setValue("person.friends[1].firstname", null, SetValueOptions.Touch)
             await result.current.setValue("person.friends[1].age", -1, true)
         })
         expect(result.current.isDirty()).toBe(true)
@@ -96,7 +97,7 @@ describe('test.reform', () => {
         expect(result.current.getError("person.friends[1].age")).not.toBeUndefined()
 
         await act(async () => {
-            await result.current.setValue("person.friends[1].firstname", null, "untouch & validate")
+            await result.current.setValue("person.friends[1].firstname", null, SetValueOptions.Untouch | SetValueOptions.Validate)
         })
 
         expect(result.current.isDirty()).toBe(true)
@@ -161,11 +162,11 @@ describe('test.reform', () => {
         expect(result.current.getErrorCount()).toEqual(0)
 
         await act(async () => {
-            await result.current.setValue("person.friends[0].firstname", "Joe", "touch")
-            await result.current.setValue("person.friends[0].age", -1, "touch")
-            await result.current.setValue("person.friends[1].firstname", "Mike", "touch")
-            await result.current.setValue("person.friends[2].firstname", null, "touch")
-            await result.current.setValue("person.friends[2].age", 24, "touch")
+            await result.current.setValue("person.friends[0].firstname", "Joe", SetValueOptions.Touch)
+            await result.current.setValue("person.friends[0].age", -1, SetValueOptions.Touch)
+            await result.current.setValue("person.friends[1].firstname", "Mike", SetValueOptions.Touch)
+            await result.current.setValue("person.friends[2].firstname", null, SetValueOptions.Touch)
+            await result.current.setValue("person.friends[2].age", 24, SetValueOptions.Touch)
             await result.current.setValue("person.friends[3].firstname", "Jim", true)
         })
 

@@ -9,9 +9,14 @@ export class AsyncResultsHolder<T extends object> extends BaseErrorsHolder<T, As
         return statuses.includes(error?.status);
     }
 
+    isAsyncResultPending(path: string) {
+        return this.get(path)?.status === 'pending'
+    }
+
     userContext() {
         return {
             getAsyncError: this.get.bind(this),
+            isAsyncResultPending: this.isAsyncResultPending.bind(this),
             hasAsyncResultStatus: this.hasAsyncResultStatus.bind(this),
         };
     }

@@ -7,13 +7,17 @@ import { FormManagerContext, ReformContext, ResetConfiguration, UseFormProps, Us
 import { AsyncValidationStatus, ValidationError } from "@dsid-opcoatlas/yop"
 import { FormEvent } from "react"
 
-export type SetValueOption = 'touch' | 'untouch' | 'validate' | 'touch & validate' | 'untouch & validate'
-
-const hasOption = (option: SetValueOption, options: boolean | SetValueOption, optionsAsBoolean?: boolean) => {
-    if (typeof options === 'boolean')
-        return options === optionsAsBoolean
-    return options.split(' & ').includes(option)
+export enum SetValueOptions {
+    Touch = 0x0001,
+    Untouch = 0x0010,
+    Validate = 0x0100,
 }
+
+const getSetValueOptions = (commit: boolean | SetValueOptions) => ({
+    touch: commit === true || (typeof commit === "number" && (commit & SetValueOptions.Touch) !== 0),
+    untouch: (typeof commit === "number" && (commit & SetValueOptions.Untouch) !== 0),
+    validate: commit === true || (typeof commit === "number" && (commit & SetValueOptions.Validate) !== 0),
+})
 
 export type ArrayHelper<T = any> = {
     append: (element: T, commit?: boolean) => Promise<boolean>
@@ -127,9 +131,9 @@ export class FormManager<T extends object> {
     private validate(touchedOnly = true) {
         this.errors.reset()
         this.asyncResults.values().forEach(error => {
-            if (error.path && (error.status === 'invalid' || error.status === 'unavailable'))
+            if (error.path && (error.status === 'invalid' || error.status === 'unavailable') && this.touched.isTouched(error.path))
                 this.errors.set(error.path, error)
-        })
+        }, this)
 
         if (this.formState.props.validationSchema == null)
             return Promise.resolve(true)
@@ -139,7 +143,7 @@ export class FormManager<T extends object> {
         result.errors.forEach((error) => {
             if (error.path && (this.submitted || !touchedOnly || this.touched.isTouched(error.path)))
                 this.errors.set(error.path, error)
-        })
+        }, this)
 
         return Promise.all(result.promises).then(results => results.flat())
             .then(results => {
@@ -150,7 +154,7 @@ export class FormManager<T extends object> {
                         if (result.status === 'invalid' || result.status === 'unavailable')
                             this.errors.set(result.path, result as ValidationError)
                     }
-                })
+                }, this)
                 return this.errors.size() === 0
             })
             .finally(() => {
@@ -169,20 +173,16 @@ export class FormManager<T extends object> {
         currentErrors.forEach((error) => {
             if (error.path && (!touchedOnly || this.touched.isTouched(error.path)))
                 this.errors.set(error.path, error)
-        })
+        }, this)
 
         return change || currentErrors.length > 0
     }
 
-    setValue(path: string, value: any, commit: boolean | SetValueOption = false) {
+    setValue(path: string, value: any, commit: boolean | SetValueOptions = false) {
         if (path === '')
             return this.setValues(value, commit)
 
-        const options = {
-            touch: hasOption("touch", commit, true),
-            untouch: hasOption("untouch", commit),
-            validate: hasOption("validate", commit, true),
-        }
+        const options = getSetValueOptions(commit)
         
         let promise = null
         
@@ -201,14 +201,10 @@ export class FormManager<T extends object> {
         return promise ?? Promise.resolve(true)
     }
 
-    setValues(values: T, commit: boolean | SetValueOption = true) {
+    setValues(values: T, commit: boolean | SetValueOptions = true) {
         let promise = null
         
-        const options = {
-            touch: hasOption("touch", commit, true),
-            untouch: hasOption("untouch", commit),
-            validate: hasOption("validate", commit, true),
-        }
+        const options = getSetValueOptions(commit)
         
         if (options.untouch)
             this.touched.untouch()
@@ -252,7 +248,7 @@ export class FormManager<T extends object> {
         setTimeout(() => {
             this.validate(false).then(valid => {
                 if (valid)
-                this.formState.props.onSubmit?.(context)
+                    this.formState.props.onSubmit?.(context)
                 else {
                     const firstErrorKey = this.errors.paths()?.[0]
                     const element = window.document.getElementById(firstErrorKey)

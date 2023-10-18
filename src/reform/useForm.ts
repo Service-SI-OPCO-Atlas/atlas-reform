@@ -2,7 +2,7 @@ import { FormEvent, useCallback, useRef, useState } from "react"
 import { useRender } from "./useRender"
 import { AsyncValidationError, AsyncValidationStatus, ObjectSchema, ValidationContext, ValidationError } from "@dsid-opcoatlas/yop"
 import React from "react"
-import { ArrayHelper, FormManager, SetValueOption } from "./FormManager"
+import { ArrayHelper, FormManager, SetValueOptions } from "./FormManager"
 
 export type ResetConfiguration = {
     initialValues?: boolean
@@ -27,6 +27,7 @@ export type ReformContext = {
     getErrorPaths: () => string[]
     isDirty: (path?: string | string[]) => boolean
     hasChanged: (path: string | string[]) => boolean
+    isAsyncResultPending: (path: string) => boolean
     hasAsyncResultStatus: (path: string, status: (AsyncValidationStatus | undefined) | (AsyncValidationStatus | undefined)[]) => boolean
     setAsyncResultPending: (path: string, pendingMessage?: string) => void
     getAsyncError: (path: string) => AsyncValidationError | undefined
@@ -37,8 +38,8 @@ export function reformContext(context: ValidationContext<any>) {
 }
 
 export type FormManagerContext<T extends object> = {
-    setValue: (path: string, value: any, commit?: boolean | SetValueOption) => void
-    setValues: (values: T, commit?: boolean | SetValueOption) => void
+    setValue: (path: string, value: any, commit?: boolean | SetValueOptions) => void
+    setValues: (values: T, commit?: boolean | SetValueOptions) => void
     getValue: (path: string) => any
     array: <T = any>(path: string) => ArrayHelper<T> | undefined
     touch: (path?: string) => boolean
