@@ -131,7 +131,7 @@ export class FormManager<T extends object> {
     private validate(touchedOnly = true) {
         this.errors.reset()
         this.asyncResults.values().forEach(error => {
-            if (error.path && (error.status === 'invalid' || error.status === 'unavailable') && this.touched.isTouched(error.path))
+            if (error.path && error.status === 'invalid' && this.touched.isTouched(error.path))
                 this.errors.set(error.path, error)
         }, this)
 
@@ -152,9 +152,9 @@ export class FormManager<T extends object> {
                         if (result.status !== 'skipped' || this.asyncResults.get(result.path) == null)
                             this.asyncResults.set(result.path, result)
                         
-                        if (result.status === 'valid')
+                        if (result.status === 'valid' || result.status === 'unavailable')
                             this.errors.delete(result.path)
-                        else if (result.status === 'invalid' || result.status === 'unavailable')
+                        else if (result.status === 'invalid')
                             this.errors.set(result.path, result as ValidationError)
                     }
                 }, this)
