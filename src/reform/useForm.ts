@@ -33,13 +33,13 @@ export type ReformContext = {
     getAsyncError: (path: string) => AsyncValidationError | undefined
 }
 
-export function reformContext(context: ValidationContext<any>) {
+export function reformContext<T>(context: ValidationContext<T>) {
     return context.userContext as ReformContext
 }
 
 export type FormManagerContext<T extends object> = {
-    setValue: (path: string, value: any, commit?: boolean | SetValueOptions) => void
-    setValues: (values: T, commit?: boolean | SetValueOptions) => void
+    setValue: (path: string, value: any, commit?: boolean | SetValueOptions) => Promise<boolean>
+    setValues: (values: T, commit?: boolean | SetValueOptions) => Promise<boolean>
     getValue: (path: string) => any
     array: <T = any>(path: string) => ArrayHelper<T> | undefined
     touch: (path?: string) => boolean

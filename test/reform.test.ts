@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { useForm } from '../src/reform/useForm'
+import { reformContext, useForm } from '../src/reform/useForm'
 import { Yop } from '@dsid-opcoatlas/yop'
 import { SetValueOptions } from '../src/reform/FormManager'
 
@@ -357,5 +357,48 @@ describe('test.reform', () => {
         expect(friendsTouchedState()).toEqual([])
 
         expect(result.current.getErrorCount()).toEqual(0)
+    })
+
+    test('test.async', async () => {
+
+        type Friend = {
+            firstname: string
+            age?: number
+        }
+
+        const { result } = renderHook(() => useForm({
+            initialValues: {
+                person: {
+                    firstname: "John",
+                    age: 30,
+                },
+            },
+            validationSchema: Yop.object({
+                person: Yop.object({
+                    firstname: Yop.string(),
+                    age: Yop.number().asyncTest<Friend>(context => {
+                        return new Promise<boolean>((resolve, reject) => {
+                            const form = reformContext(context)
+                            form.setAsyncResultPending(context.path!, "Validation pending")
+                            setTimeout(() => resolve(true), 1000)
+                        })
+                    }),
+                })
+            })
+        }))
+
+        await act(async () => {
+            const promise = result.current.setValue("person.firstname", "Jack", true)
+            expect(result.current.getError("person.age")).toEqual({
+                code: 'asyncTest',
+                value: 30,
+                path: 'person.age',
+                message: 'Validation pending',
+                status: 'pending'
+            })
+            await promise
+        })
+
+        expect(result.current.getError("person.age")).toBeUndefined()
     })
 })

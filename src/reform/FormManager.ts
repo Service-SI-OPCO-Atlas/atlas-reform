@@ -144,14 +144,17 @@ export class FormManager<T extends object> {
             if (error.path && (this.submitted || !touchedOnly || this.touched.isTouched(error.path)))
                 this.errors.set(error.path, error)
         }, this)
-
+        
         return Promise.all(result.promises).then(results => results.flat())
             .then(results => {
                 results.forEach((result) => {
                     if (result.path) {
                         if (result.status !== 'skipped' || this.asyncResults.get(result.path) == null)
                             this.asyncResults.set(result.path, result)
-                        if (result.status === 'invalid' || result.status === 'unavailable')
+                        
+                        if (result.status === 'valid')
+                            this.errors.delete(result.path)
+                        else if (result.status === 'invalid' || result.status === 'unavailable')
                             this.errors.set(result.path, result as ValidationError)
                     }
                 }, this)
@@ -184,7 +187,7 @@ export class FormManager<T extends object> {
 
         const options = getSetValueOptions(commit)
         
-        let promise = null
+        let promise: Promise<boolean> | null = null
         
         this.values.setAt(path, value)
 
@@ -202,7 +205,7 @@ export class FormManager<T extends object> {
     }
 
     setValues(values: T, commit: boolean | SetValueOptions = true) {
-        let promise = null
+        let promise: Promise<boolean> | null = null
         
         const options = getSetValueOptions(commit)
         
