@@ -255,7 +255,7 @@ export class FormManager<T extends object> {
         setTimeout(() => {
             _this.validate(false).then(valid => {
                 if (valid)
-                _this.formState.props.onSubmit?.(context)
+                    _this.formState.props.onSubmit?.(context)
                 else {
                     const firstErrorKey = _this.errors.paths()?.[0]
                     const element = window.document.getElementById(firstErrorKey)
