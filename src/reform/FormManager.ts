@@ -145,7 +145,9 @@ export class FormManager<T extends object> {
                 this.errors.set(error.path, error)
         }, this)
         
-        return Promise.all(result.promises).then(results => results.flat())
+        const _this = this
+        return Promise.all(result.promises)
+            .then(results => results.flat())
             .then(results => {
                 results.forEach((result) => {
                     if (result.path) {
@@ -157,12 +159,12 @@ export class FormManager<T extends object> {
                         else if (result.status === 'invalid')
                             this.errors.set(result.path, result as ValidationError)
                     }
-                }, this)
-                return this.errors.size() === 0
+                }, _this)
+                return _this.errors.size() === 0
             })
             .finally(() => {
-                this.valuesSnapshot = this.values.clone()
-                this.setAsyncValidating(false)
+                _this.valuesSnapshot = _this.values.clone()
+                _this.setAsyncValidating(false)
             })
     }
 
@@ -248,12 +250,14 @@ export class FormManager<T extends object> {
 
         this.submitted = true
         this.setSubmitting(true)
+
+        const _this = this
         setTimeout(() => {
-            this.validate(false).then(valid => {
+            _this.validate(false).then(valid => {
                 if (valid)
-                    this.formState.props.onSubmit?.(context)
+                _this.formState.props.onSubmit?.(context)
                 else {
-                    const firstErrorKey = this.errors.paths()?.[0]
+                    const firstErrorKey = _this.errors.paths()?.[0]
                     const element = window.document.getElementById(firstErrorKey)
                     if (element) {
                         setTimeout(() => {
@@ -261,7 +265,7 @@ export class FormManager<T extends object> {
                             element.scrollIntoView({ block: 'center' })
                         }, 250)
                     }
-                    this.setSubmitting(false)
+                    _this.setSubmitting(false)
                 }
             })
         })
