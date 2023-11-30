@@ -28,9 +28,10 @@ export function Form<T extends object>(props: FormProps<T>) {
                     padding: "1em",
                     fontFamily: "monospace",
                     border: "2px solid firebrick",
+                    borderInline: "2px solid firebrick",
                     color: "firebrick",
                     background: "white",
-                    whiteSpace: "pre"
+                    whiteSpace: "pre-wrap"
                 }}>
                     Validation errors: { JSON.stringify(Object.fromEntries(context.getErrorPaths().map(path => ([ path, context.getError(path) ]))), null, 4) }
                 </div>
