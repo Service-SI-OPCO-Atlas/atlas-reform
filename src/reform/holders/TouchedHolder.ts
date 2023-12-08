@@ -49,14 +49,12 @@ export class TouchedHolder<T extends object> extends BaseHolder<T> {
     userContext() {
         return {
             isTouched: this.isTouched.bind(this),
+            touch: this.touch.bind(this),
+            untouch: this.untouch.bind(this),
         };
     }
 
     formContext() {
-        return {
-            ...this.userContext(),
-            touch: this.touch.bind(this),
-            untouch: this.untouch.bind(this),
-        };
+        return this.userContext()
     }
 }

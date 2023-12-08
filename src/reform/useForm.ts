@@ -19,6 +19,8 @@ export type UseFormProps<T extends object> = {
 
 export type ReformContext = {
     isTouched: (path?: string) => boolean
+    touch: (path?: string) => boolean
+    untouch: (path?: string) => boolean
     submitted: boolean
     submitting: boolean
     asyncValidating: boolean
