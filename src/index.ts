@@ -1,3 +1,4 @@
+export * from "./reform/Reform"
 export * from "./reform/FormManager"
 export * from "./reform/useForm"
 export * from "./reform/useFormContext"

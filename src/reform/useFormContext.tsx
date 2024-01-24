@@ -1,5 +1,6 @@
 import React, { FormHTMLAttributes } from "react"
 import { UseFormReturn } from "./useForm"
+import { Reform } from "./Reform"
 
 const FormContext = React.createContext<UseFormReturn<any> | null>(null)
 
@@ -20,7 +21,7 @@ export function Form<T extends object>(props: FormProps<T>) {
             <form ref={ context.formRefCallback } onSubmit={ (e) => context.submit(e, context) } { ...formAttrs }>
                 <fieldset disabled={ props.disabled }>{ children }</fieldset>
                 
-                { context.getErrorCount() > 0 && process?.env?.NODE_ENV === 'development' &&
+                { context.getErrorCount() > 0 && Reform.debugFormErrors &&
                 <div style={{
                     all: "initial",
                     display: "block",
