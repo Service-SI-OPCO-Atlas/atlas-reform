@@ -1,13 +1,24 @@
-import { renderHook, act } from '@testing-library/react-hooks'
+import { renderHook, act } from '@testing-library/react'
+import { describe, test, expect } from 'vitest'
 import { reformContext, useForm } from '../src/reform/useForm'
 import { Yop } from '@dsid-opcoatlas/yop'
 import { SetValueOptions } from '../src/reform/FormManager'
+
+type Person = {
+    firstname?: string | null
+    age?: number | null
+    friends?: Person[] | null
+}
+
+type PersonModel = {
+    person?: Person | null
+}
 
 describe('test.reform', () => {
 
     test('test.setValue', async () => {
 
-        const { result } = renderHook(() => useForm({
+        const { result } = renderHook(() => useForm<PersonModel>({
             initialValues: {
                 person: {
                     firstname: "John",
@@ -28,7 +39,6 @@ describe('test.reform', () => {
                         firstname: Yop.string().required(),
                         age: Yop.number().min(0),
                     }))
-
                 })
             })
         }))
@@ -123,7 +133,7 @@ describe('test.reform', () => {
             age?: number
         }
 
-        const { result } = renderHook(() => useForm({
+        const { result } = renderHook(() => useForm<PersonModel>({
             initialValues: {
                 person: {
                     firstname: "John",
@@ -144,7 +154,7 @@ describe('test.reform', () => {
         }))
 
         const friendsTouchedState = () => {
-            return Array.from(Array((result.current.values?.person.friends ?? []).length).keys()).map(index => [
+            return Array.from(Array((result.current.values?.person?.friends ?? []).length).keys()).map(index => [
                 result.current.isTouched(`person.friends[${ index }]`),
                 result.current.isTouched(`person.friends[${ index }].firstname`),
                 result.current.isTouched(`person.friends[${ index }].age`),
@@ -366,7 +376,7 @@ describe('test.reform', () => {
             age?: number
         }
 
-        const { result } = renderHook(() => useForm({
+        const { result } = renderHook(() => useForm<PersonModel>({
             initialValues: {
                 person: {
                     firstname: "John",
