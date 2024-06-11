@@ -1,6 +1,6 @@
 {
   "name": "@dsid-opcoatlas/reform",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Yet another React form library",
   "private": false,
   "type": "module",
@@ -45,7 +45,7 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@dsid-opcoatlas/yop": "1.1.10",
+    "@dsid-opcoatlas/yop": "2.0.0",
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {
