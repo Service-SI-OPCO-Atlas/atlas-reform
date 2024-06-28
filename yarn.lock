@@ -37,10 +37,10 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@dsid-opcoatlas/yop@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-2.0.1.tgz#3eb63caed42afff6bd81651b6dea7ccf8bef891d"
-  integrity sha512-skosYEEjtvR6HPXToJPQ5xXYW14yWLOijULLnF28Ur3ok/yKsUck8EIctscHT8ZGeszOFOqVe6EKtljjGRolbg==
+"@dsid-opcoatlas/yop@2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@dsid-opcoatlas/yop/-/yop-2.0.3.tgz#e05511c940846f812b53a4b3eb4b5c44eb60d774"
+  integrity sha512-0EDvpIN7QCpy28QHUQMac+v5ZwL1oYWxDpS+eBcolJ+lfIQ8+LfP5P6wOBujKIc8TILfSLLDIM+ehJj3dvduYQ==
 
 "@esbuild/aix-ppc64@0.20.2":
   version "0.20.2"

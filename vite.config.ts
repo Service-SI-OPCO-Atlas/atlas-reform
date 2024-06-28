@@ -12,15 +12,7 @@ export default defineConfig({
             formats: ["es"],
         },
         rollupOptions: {
-            external: ["react", "react-dom", "react/jsx-runtime", "lodash"],
-            output: {
-                globals: {
-                    react: "React",
-                    "react-dom": "ReactDOM",
-                    "react/jsx-runtime": "react/jsx-runtime",
-                    lodash: "lodash",
-                },
-            },
+            external: ["react", "react-dom", "react/jsx-runtime", "lodash-es"],
         },
         sourcemap: true,
         emptyOutDir: true,
