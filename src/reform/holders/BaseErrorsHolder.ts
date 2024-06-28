@@ -3,7 +3,7 @@ import { BaseHolder } from "./BaseHolder";
 
 export abstract class BaseErrorsHolder<T extends object, E extends ValidationError> extends BaseHolder<T> {
 
-    private errors = new Map<string, E>();
+    protected errors = new Map<string, E>();
 
     get(path: string) {
         return this.errors.get(path);

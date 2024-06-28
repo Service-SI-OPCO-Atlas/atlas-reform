@@ -1,5 +1,7 @@
 import { AsyncValidationError, AsyncValidationStatus } from "@dsid-opcoatlas/yop";
 import { BaseErrorsHolder } from "./BaseErrorsHolder";
+import { ValuesHolder } from "./ValuesHolder";
+import { isEqual } from "lodash-es";
 
 export class AsyncResultsHolder<T extends object> extends BaseErrorsHolder<T, AsyncValidationError> {
 
@@ -11,6 +13,13 @@ export class AsyncResultsHolder<T extends object> extends BaseErrorsHolder<T, As
 
     isAsyncResultPending(path: string) {
         return this.get(path)?.status === 'pending'
+    }
+
+    resetChanged(values: ValuesHolder<T>) {
+        for (let [path, error] of this.errors) {
+            if (!["unavailable", "pending"].includes(error.status) && !isEqual(values.getAt(path), error.value))
+                this.errors.delete(path);
+        }
     }
 
     userContext() {
