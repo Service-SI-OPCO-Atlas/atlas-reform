@@ -35,6 +35,21 @@ export type FormState<T extends object> = {
     props: UseFormProps<T>
 }
 
+export class ReformSetValueEvent<T = any> extends Event {
+
+    static readonly eventName = 'reform:set-value'
+    
+    constructor(
+        readonly form: FormManagerContext<any>,
+        readonly path: string,
+        readonly previousValue: T,
+        readonly value: T,
+        readonly options: ReturnType<typeof getSetValueOptions>
+    ) {
+        super(ReformSetValueEvent.eventName)
+    }
+}
+
 export class FormManager<T extends object> {
 
     private formState: FormState<T>
@@ -52,6 +67,8 @@ export class FormManager<T extends object> {
     private errors = new ErrorsHolder<T>(this)
     private values = new ValuesHolder<T>(this)
     private asyncResults = new AsyncResultsHolder<T>(this)
+
+    private eventTarget = new EventTarget()
 
     constructor(
         formState: FormState<T>,
@@ -192,6 +209,7 @@ export class FormManager<T extends object> {
         
         let promise: Promise<boolean> | null = null
         
+        const previousValue = this.values.getAt(path)
         this.values.setAt(path, value)
 
         if (options.untouch)
@@ -202,6 +220,12 @@ export class FormManager<T extends object> {
         if (options.validate) {
             promise = this.validate()
             this.renderForm()
+        }
+
+        if (this.formState.props.dispatchEvent !== false) {
+            setTimeout(() => {
+                this.eventTarget.dispatchEvent(new ReformSetValueEvent(this.formContext(), path, previousValue, value, options))
+            })
         }
         
         return promise ?? Promise.resolve(true)
@@ -449,6 +473,7 @@ export class FormManager<T extends object> {
             setValues: this.setValues.bind(this),
             submit: this.submit.bind(this),
             setAsyncResultPending: this.setAsyncResultPending.bind(this),
+            eventTarget: this.eventTarget,
 
             ...this.formState.props
         }

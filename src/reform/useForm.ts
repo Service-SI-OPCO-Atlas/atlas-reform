@@ -15,6 +15,7 @@ export type UseFormProps<T extends object> = {
     validationSchema?: ObjectSchema<Partial<T | null | undefined>>
     onSubmit?: (context: UseFormReturn<T>) => void
     resetConfiguration?: ResetConfiguration
+    dispatchEvent?: boolean
 }
 
 export type ReformContext = {
@@ -54,6 +55,7 @@ export type FormManagerContext<T extends object> = {
     validate: (touchedOnly?: boolean) => Promise<boolean>
     validateAt: (path: string, touchedOnly?: boolean) => boolean
     renderForm: () => void
+    eventTarget: EventTarget
 } & UseFormProps<T> & ReformContext
 
 export type UseFormReturn<T extends object> = FormManagerContext<T> & {
