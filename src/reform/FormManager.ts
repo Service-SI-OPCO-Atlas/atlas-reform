@@ -48,7 +48,7 @@ export class FormManager<T extends object> {
     private submitted = false
     private resetDeps: ResetConfiguration | undefined = undefined
 
-    readonly touched = new TouchedHolder<T>(this)
+    private touched = new TouchedHolder<T>(this)
     private errors = new ErrorsHolder<T>(this)
     private values = new ValuesHolder<T>(this)
     private asyncResults = new AsyncResultsHolder<T>(this)
@@ -443,6 +443,7 @@ export class FormManager<T extends object> {
             hasChanged: this.hasChanged.bind(this),
             resetToInitialValueAt: this.resetToInitialValueAt.bind(this),
             array: this.array.bind(this),
+            validate: this.validate.bind(this),
             validateAt: this.validateAt.bind(this),
             setValue: this.setValue.bind(this),
             setValues: this.setValues.bind(this),
