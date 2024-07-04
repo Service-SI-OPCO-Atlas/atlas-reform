@@ -51,6 +51,7 @@ export type FormManagerContext<T extends object> = {
     submit: (e: FormEvent<HTMLFormElement>, context: UseFormReturn<T>) => boolean
     setSubmitting: (value: boolean) => void
     values: T | null
+    validate: (touchedOnly?: boolean) => Promise<boolean>
     validateAt: (path: string, touchedOnly?: boolean) => boolean
     renderForm: () => void
 } & UseFormProps<T> & ReformContext
