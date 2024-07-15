@@ -1,21 +1,19 @@
-import { UseFormReturn, getFieldState, useFormContext } from "@dsid-opcoatlas/reform"
+import { getFieldState, useFormContext } from "@dsid-opcoatlas/reform"
 import { getParentPath } from "@dsid-opcoatlas/yop"
 import React, { InputHTMLAttributes, useRef } from "react"
-import { InputAttributes } from "./InputHTMLProps"
+import { InputAttributes, ReformEvents } from "./InputHTMLProps"
 
-export type BaseRadioFieldHTMLAttributes = Omit<InputAttributes<'radio'>,
-    'accept' |
+export type BaseFileFieldHTMLAttributes = Omit<InputAttributes<'file'>,
     'alt' |
     'autocomplete' |
-    'capture' |
     'dirname' |
     'height' |
     'list' |
+    'multiple' |
     'max' |
     'maxLength' |
     'min' |
     'minLength' |
-    'multiple' |
     'placeholder' |
     'readOnly' |
     'size' |
@@ -25,30 +23,29 @@ export type BaseRadioFieldHTMLAttributes = Omit<InputAttributes<'radio'>,
     'width'
 >
 
-export type BaseRadioFieldProps<T extends object, V> = BaseRadioFieldHTMLAttributes & {
-    onChange?: (value: V, form: UseFormReturn<T>, parentPath?: string) => void
-    modelValue: V
+export type BaseFileFieldProps<T extends object> = BaseFileFieldHTMLAttributes & Omit<ReformEvents<File, T>, 'onBlur'> & {
     render: () => void
 }
 
-export function BaseRadioField<T extends object, V = any>(props: BaseRadioFieldProps<T, V>) {
+export function BaseFileField<T extends object>(props: BaseFileFieldProps<T>) {
 
-    const { onChange, modelValue, render, ...inputProps } = props
+    const { onChange, render, ...inputProps } = props
     const context = useFormContext<T>()
-    const fieldState = getFieldState<V | null>(context, props.name)
+    const fieldState = getFieldState<boolean | null>(context, props.name)
 
     const inputRef = useRef<HTMLInputElement>(null)
 
     const internalOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.currentTarget.checked && modelValue !== fieldState.value) {
-            context.setValue(props.name, modelValue, true)
-            onChange?.(modelValue, context, getParentPath(props.name) ?? undefined)
+        const file = event.currentTarget.files?.[0] ?? null
+        if (file) {
+            context.setValue(props.name, file, true)
+            props.onChange?.(file, context, getParentPath(props.name) ?? undefined)
         }
     }
 
     // If this is the first render or if this input isn't currently edited
     if (inputRef.current == null || inputRef.current !== document.activeElement) {
-        const value = fieldState.value === modelValue
+        const value = fieldState.value ?? false
         if (inputRef.current)
             inputRef.current.checked = value
         else
@@ -58,7 +55,7 @@ export function BaseRadioField<T extends object, V = any>(props: BaseRadioFieldP
     return (
         <input
             { ...inputProps }
-            type="radio"
+            type="file"
             ref={ inputRef }
             onChange={ internalOnChange }
         />
