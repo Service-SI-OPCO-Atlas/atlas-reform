@@ -11,12 +11,14 @@ export enum SetValueOptions {
     Touch = 0x0001,
     Untouch = 0x0010,
     Validate = 0x0100,
+    Silent = 0x1000,
 }
 
 const getSetValueOptions = (commit: boolean | SetValueOptions) => ({
     touch: commit === true || (typeof commit === "number" && (commit & SetValueOptions.Touch) !== 0),
     untouch: (typeof commit === "number" && (commit & SetValueOptions.Untouch) !== 0),
     validate: commit === true || (typeof commit === "number" && (commit & SetValueOptions.Validate) !== 0),
+    silent: (typeof commit === "number" && (commit & SetValueOptions.Silent) !== 0),
 })
 
 export type ArrayHelper<T = any> = {
@@ -222,7 +224,7 @@ export class FormManager<T extends object> {
             this.renderForm()
         }
 
-        if (this.formState.props.dispatchEvent !== false) {
+        if (this.formState.props.dispatchEvent !== false && options.silent === false) {
             setTimeout(() => {
                 this.eventTarget.dispatchEvent(new ReformSetValueEvent(this.formContext(), path, previousValue, value, options))
             })
