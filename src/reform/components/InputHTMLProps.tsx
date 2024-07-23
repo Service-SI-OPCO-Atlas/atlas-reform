@@ -1,5 +1,5 @@
 import { DOMAttributes, InputHTMLAttributes } from "react"
-import { UseFormReturn } from "@dsid-opcoatlas/reform"
+import { UseFormReturn } from "../useForm"
 
 type HTMLInputTypeAttribute =
         | 'button'
