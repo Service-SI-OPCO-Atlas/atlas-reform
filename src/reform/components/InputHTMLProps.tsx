@@ -1,5 +1,5 @@
 import { DOMAttributes, InputHTMLAttributes } from "react"
-import { UseFormReturn } from "../useForm"
+import { UseFormReturn } from "@dsid-opcoatlas/reform"
 
 type HTMLInputTypeAttribute =
         | 'button'
@@ -54,7 +54,6 @@ export type InputAttributes<InputType extends HTMLInputTypeAttribute> = (
         'formnovalidate' |
         'formtarget' |
         'pattern' |
-        'required' |
         'src' |
         keyof DOMAttributes<HTMLInputElement>
     > &

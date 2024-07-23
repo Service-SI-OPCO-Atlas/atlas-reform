@@ -1,6 +1,6 @@
+import { getFieldState, useFormContext } from "@dsid-opcoatlas/reform"
+import { getParentPath } from "@dsid-opcoatlas/yop"
 import React, { InputHTMLAttributes, useRef } from "react"
-import { useFormContext } from "../useFormContext"
-import { getFieldState } from "../useForm"
 import { InputAttributes, ReformEvents } from "./InputHTMLProps"
 
 export type BaseCheckboxFieldHTMLAttributes = Omit<InputAttributes<'checkbox'>,
@@ -11,7 +11,6 @@ export type BaseCheckboxFieldHTMLAttributes = Omit<InputAttributes<'checkbox'>,
     'dirname' |
     'height' |
     'list' |
-    'multiple' |
     'max' |
     'maxLength' |
     'min' |
@@ -42,7 +41,7 @@ export function BaseCheckboxField<T extends object>(props: BaseCheckboxFieldProp
         const value = event.currentTarget.checked
         if (value !== fieldState.value) {
             context.setValue(props.name, value, true)
-            onChange?.(value, context)
+            onChange?.(value, context, getParentPath(props.name) ?? undefined)
         }
     }
 

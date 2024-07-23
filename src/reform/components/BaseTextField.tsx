@@ -1,6 +1,6 @@
+import { getFieldState, useFormContext } from "@dsid-opcoatlas/reform"
+import { getParentPath } from "@dsid-opcoatlas/yop"
 import React, { InputHTMLAttributes, useRef } from "react"
-import { useFormContext } from "../useFormContext"
-import { getFieldState } from "../useForm"
 import { InputAttributes, ReformEvents } from "./InputHTMLProps"
 
 export interface InputSelection {
@@ -9,14 +9,11 @@ export interface InputSelection {
     direction?: "forward" | "backward" | "none"
 }
 
-export type BaseTextFieldHTMLAttributes = Omit<InputAttributes<'text' | 'password'>,
+export type BaseTextFieldHTMLAttributes = Omit<InputAttributes<"text" | "search" | "number" | "date" | "email" | "password" | "tel" | "time">,
     'accept' |
     'alt' |
     'capture' |
     'height' |
-    'multiple' |
-    'max' |
-    'min' |
     'multiple' |
     'src' |
     'step' |
@@ -100,14 +97,14 @@ export function BaseTextField<T extends object, V = string>(props: BaseTextField
         if (value !== fieldState.value) {
             context.setValue(props.name, value)
             context.validateAt(props.name) && render()
-            onChange?.(value, context)
+            onChange?.(value, context, getParentPath(props.name) ?? undefined)
         }
     }
 
     const internalOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
         const value = getInputValue(event)
         context.setValue(props.name, value, true)
-        onBlur?.(value, context)
+        onBlur?.(value, context, getParentPath(props.name) ?? undefined)
     }
 
     // If this is the first render or if this input isn't currently edited
