@@ -1,9 +1,9 @@
-import { cloneDeep, get, isEqual, toPath } from "lodash"
+import { cloneDeep, get, isEqual, toPath } from "lodash-es"
 import { AsyncResultsHolder } from "./holders/AsyncResultsHolder"
 import { ErrorsHolder } from "./holders/ErrorsHolder"
 import { TouchedHolder } from "./holders/TouchedHolder"
 import { ValuesHolder } from "./holders/ValuesHolder"
-import { FormManagerContext, ReformContext, ResetConfiguration, UseFormProps, UseFormReturn } from "./useForm"
+import { FormManagerContext, ReformContext, UseFormProps, UseFormReturn } from "./useForm"
 import { AsyncValidationStatus, ValidationError } from "@dsid-opcoatlas/yop"
 import { FormEvent } from "react"
 
@@ -52,6 +52,16 @@ export class ReformSetValueEvent<T = any> extends Event {
     }
 }
 
+const defaultIsDepsEqual = (previousDeps: React.DependencyList, deps: React.DependencyList): boolean => {
+    if (previousDeps.length !== deps.length)
+        return false
+    for (let i = 0; i < deps.length; i++) {
+        if (previousDeps[i] !== deps[i])
+            return false
+    }
+    return true
+}
+
 export class FormManager<T extends object> {
 
     private formState: FormState<T>
@@ -63,7 +73,7 @@ export class FormManager<T extends object> {
     private convertedInitialValues = {} as T
     private valuesSnapshot = {} as T
     private submitted = false
-    private resetDeps: ResetConfiguration | undefined = undefined
+    private resetDeps: React.DependencyList | undefined = undefined
 
     private touched = new TouchedHolder<T>(this)
     private errors = new ErrorsHolder<T>(this)
@@ -84,10 +94,10 @@ export class FormManager<T extends object> {
         this.renderForm = renderForm
     }
 
-    private initValues() {
+    private initValues(initialValues?: T | null | undefined) {
         let values = ({} as T)
-        if (this.formState.props.initialValues) {
-            values = cloneDeep(this.formState.props.initialValues)
+        if (initialValues != null || this.formState.props.initialValues != null) {
+            values = cloneDeep(initialValues ?? this.formState.props.initialValues!)
             if (this.formState.props.initialValuesConverter)
                 values = this.formState.props.initialValuesConverter(values)
         }
@@ -100,9 +110,14 @@ export class FormManager<T extends object> {
 
         const props = this.formState.props
         
-        if (!isEqual(props.resetConfiguration?.deps, this.resetDeps?.deps))
-            this.reset(props.resetConfiguration?.initialValues)
-        this.resetDeps = props.resetConfiguration
+        if (props.resetConfiguration != null) {
+            if (this.resetDeps != null) {
+                const isDepsEqual = props.resetConfiguration.isEqual ?? defaultIsDepsEqual
+                if (!isDepsEqual(this.resetDeps, props.resetConfiguration.deps))
+                    this.reset(props.resetConfiguration.resetInitialValues)
+            }
+            this.resetDeps = props.resetConfiguration.deps
+        }
 
         if (!this.touched.isTouched() && !isEqual(props.initialValues ?? null, this.initialValues)) {
             this.initialValues = props.initialValues ?? null
@@ -141,6 +156,10 @@ export class FormManager<T extends object> {
             const pathSegments = toPath(path)
             return !isEqual(get(this.valuesSnapshot, pathSegments), this.values.getAt(pathSegments))
         })
+    }
+
+    resetValues(initialValues: T) {
+        this.initValues(initialValues)
     }
 
     resetToInitialValueAt(path: string) {
@@ -464,6 +483,7 @@ export class FormManager<T extends object> {
             asyncValidating: this.formState.asyncValidating,
             values: this.values.get(),
             reset: this.reset.bind(this),
+            resetValues: this.resetValues.bind(this),
             renderForm: this.renderForm.bind(this),
             isDirty : this.isDirty.bind(this),
             hasChanged: this.hasChanged.bind(this),

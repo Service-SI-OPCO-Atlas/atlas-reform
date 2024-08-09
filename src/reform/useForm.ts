@@ -5,8 +5,9 @@ import React from "react"
 import { ArrayHelper, FormManager, SetValueOptions } from "./FormManager"
 
 export type ResetConfiguration = {
-    initialValues?: boolean
-    deps?: React.DependencyList
+    deps: React.DependencyList
+    isEqual?: (previousDeps: React.DependencyList, deps: React.DependencyList) => boolean
+    resetInitialValues?: boolean
 }
 
 export type UseFormProps<T extends object> = {
@@ -48,6 +49,7 @@ export type FormManagerContext<T extends object> = {
     touch: (path?: string) => boolean
     untouch: (path?: string) => boolean
     reset: (initialValues?: boolean) => void
+    resetValues: (initialValues: T) => void
     resetToInitialValueAt: (path: string) => void
     submit: (e: FormEvent<HTMLFormElement>, context: UseFormReturn<T>) => boolean
     setSubmitting: (value: boolean) => void

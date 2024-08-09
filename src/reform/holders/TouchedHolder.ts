@@ -1,4 +1,4 @@
-import { get, set, unset } from "lodash";
+import { get, set, unset } from "lodash-es";
 import { BaseHolder } from "./BaseHolder";
 
 export class TouchedHolder<T extends object> extends BaseHolder<T> {

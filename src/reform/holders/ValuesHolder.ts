@@ -1,4 +1,4 @@
-import { get, set, cloneDeep, isEqual } from "lodash";
+import { get, set, cloneDeep, isEqual } from "lodash-es";
 import { BaseHolder } from "./BaseHolder";
 
 export class ValuesHolder<T extends object> extends BaseHolder<T> {

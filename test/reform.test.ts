@@ -3,6 +3,7 @@ import { describe, test, expect } from 'vitest'
 import { reformContext, useForm } from '../src/reform/useForm'
 import { Yop } from '@dsid-opcoatlas/yop'
 import { SetValueOptions } from '../src/reform/FormManager'
+import { cloneDeep, isEqual } from 'lodash-es'
 
 type Person = {
     firstname?: string | null
@@ -410,5 +411,81 @@ describe('test.reform', () => {
         })
 
         expect(result.current.getError("person.age")).toBeUndefined()
+    })
+
+    test('test.resetConfiguration', async () => {
+        const initialValues = {
+            person: {
+                firstname: "John",
+                age: 30,
+                friends: [{
+                    firstname: "Mike",
+                }, {
+                    firstname: "Paul",
+                    age: 24,
+                }]
+            },
+        }
+
+        const { result, rerender } = renderHook((props: { initialValues: any }) => useForm<PersonModel>({
+            initialValues: props.initialValues,
+            resetConfiguration: {
+                deps: [props.initialValues]
+            }
+        }), { initialProps: { initialValues } })
+
+        expect(result.current.values === initialValues).toBe(false)
+
+        let values = result.current.values
+        rerender({ initialValues })
+        expect(result.current.values === values).toBe(true)
+
+        initialValues.person.firstname = "Jack"
+        values = result.current.values
+        rerender({ initialValues })
+        expect(result.current.values === values).toBe(true)
+
+        values = result.current.values
+        rerender({ initialValues: { ...initialValues } })
+        expect(result.current.values === values).toBe(false)
+    })
+
+    test('test.resetConfigurationDeepCompare', async () => {
+        const initialValues = {
+            person: {
+                firstname: "John",
+                age: 30,
+                friends: [{
+                    firstname: "Mike",
+                }, {
+                    firstname: "Paul",
+                    age: 24,
+                }]
+            },
+        }
+
+        const { result, rerender } = renderHook((props: { initialValues: any }) => useForm<PersonModel>({
+            initialValues: props.initialValues,
+            resetConfiguration: {
+                deps: [props.initialValues],
+                isEqual: (previousDeps, deps) => isEqual(previousDeps, deps),
+            }
+        }), { initialProps: { initialValues } })
+
+        expect(result.current.values === initialValues).toBe(false)
+
+        let values = result.current.values
+        rerender({ initialValues })
+        expect(result.current.values === values).toBe(true)
+
+        values = result.current.values
+        rerender({ initialValues: { ...initialValues } })
+        expect(result.current.values === values).toBe(true)
+
+        const initialValuesCopy = cloneDeep(initialValues)
+        initialValuesCopy.person.firstname = "Jack"
+        values = result.current.values
+        rerender({ initialValues: initialValuesCopy })
+        expect(result.current.values === values).toBe(false)
     })
 })
