@@ -37,19 +37,25 @@ export type FormState<T extends object> = {
     props: UseFormProps<T>
 }
 
-export class ReformSetValueEvent<T = any> extends Event {
+export interface ReformSetValueEvent<T = any> extends CustomEvent<{
+    readonly form: FormManagerContext<any>,
+    readonly path: string,
+    readonly previousValue: T,
+    readonly value: T,
+    readonly options: ReturnType<typeof getSetValueOptions>
+}> {
+}
 
-    static readonly eventName = 'reform:set-value'
-    
-    constructor(
-        readonly form: FormManagerContext<any>,
-        readonly path: string,
-        readonly previousValue: T,
-        readonly value: T,
-        readonly options: ReturnType<typeof getSetValueOptions>
-    ) {
-        super(ReformSetValueEvent.eventName)
-    }
+const ReformSetValueEventType = 'reform:set-value'
+
+function createReformSetValueEvent<T = any>(
+    form: FormManagerContext<any>,
+    path: string,
+    previousValue: T,
+    value: T,
+    options: ReturnType<typeof getSetValueOptions>
+): ReformSetValueEvent<T> {
+    return new CustomEvent(ReformSetValueEventType, { detail: {form, path, previousValue, value, options }})
 }
 
 const defaultIsDepsEqual = (previousDeps: React.DependencyList, deps: React.DependencyList): boolean => {
@@ -245,7 +251,7 @@ export class FormManager<T extends object> {
 
         if (this.formState.props.dispatchEvent !== false && options.silent === false) {
             setTimeout(() => {
-                this.eventTarget.dispatchEvent(new ReformSetValueEvent(this.formContext(), path, previousValue, value, options))
+                this.eventTarget.dispatchEvent(createReformSetValueEvent(this.formContext(), path, previousValue, value, options))
             })
         }
         
@@ -470,6 +476,14 @@ export class FormManager<T extends object> {
         }
     }
 
+    addReformEventListener(listener: EventListener) {
+        this.eventTarget.addEventListener(ReformSetValueEventType, listener)
+    }
+
+    removeReformEventListener(listener: EventListener) {
+        this.eventTarget.removeEventListener(ReformSetValueEventType, listener)
+    }
+
     formContext(): FormManagerContext<T> {
         return {
             ...this.touched.formContext(),
@@ -495,8 +509,9 @@ export class FormManager<T extends object> {
             setValues: this.setValues.bind(this),
             submit: this.submit.bind(this),
             setAsyncResultPending: this.setAsyncResultPending.bind(this),
-            eventTarget: this.eventTarget,
-
+            addReformEventListener: this.addReformEventListener.bind(this),
+            removeReformEventListener: this.removeReformEventListener.bind(this),
+        
             ...this.formState.props
         }
     }
