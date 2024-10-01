@@ -172,6 +172,12 @@ export class FormManager<T extends object> {
         this.values.setAt(path, get(this.convertedInitialValues, path))
     }
 
+    clearErrorsAt(path: string, asyncResults = true) {
+        this.errors.delete(path)
+        if (asyncResults)
+            this.asyncResults.delete(path)
+    }
+
     private validate(touchedOnly = true) {
         this.errors.reset()
         this.asyncResults.resetChanged(this.values)
@@ -504,6 +510,7 @@ export class FormManager<T extends object> {
             isDirty : this.isDirty.bind(this),
             hasChanged: this.hasChanged.bind(this),
             resetToInitialValueAt: this.resetToInitialValueAt.bind(this),
+            clearErrorsAt: this.clearErrorsAt.bind(this),
             array: this.array.bind(this),
             validate: this.validate.bind(this),
             validateAt: this.validateAt.bind(this),

@@ -51,6 +51,7 @@ export type FormManagerContext<T extends object> = {
     reset: (initialValues?: boolean) => void
     resetValues: (initialValues: T) => void
     resetToInitialValueAt: (path: string) => void
+    clearErrorsAt: (path: string, asyncResults?: boolean) => void
     submit: (e: FormEvent<HTMLFormElement>, context: UseFormReturn<T>) => boolean
     setSubmitting: (value: boolean) => void
     values: T | null
