@@ -176,7 +176,7 @@ export class FormManager<T extends object> {
         this.errors.reset()
         this.asyncResults.resetChanged(this.values)
         this.asyncResults.values().forEach(error => {
-            if (error.path && error.status === 'invalid' && this.touched.isTouched(error.path))
+            if (error.path && ["invalid", "pending"].includes(error.status) && this.touched.isTouched(error.path))
                 this.errors.set(error.path, error)
         }, this)
 
@@ -196,13 +196,15 @@ export class FormManager<T extends object> {
             .then(results => {
                 results.forEach((result) => {
                     if (result.path) {
-                        if (result.status !== 'skipped' || this.asyncResults.get(result.path) == null)
-                            this.asyncResults.set(result.path, result)
+                        if (result.status !== 'skipped' || _this.asyncResults.get(result.path) == null)
+                            _this.asyncResults.set(result.path, result)
                         
                         if (result.status === 'valid' || result.status === 'unavailable')
-                            this.errors.delete(result.path)
+                            _this.errors.delete(result.path)
                         else if (result.status === 'invalid')
-                            this.errors.set(result.path, result as ValidationError)
+                            _this.errors.set(result.path, result as ValidationError)
+                        
+                        _this.renderForm()
                     }
                 }, _this)
                 return _this.errors.size() === 0
