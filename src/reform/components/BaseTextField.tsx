@@ -52,7 +52,7 @@ export function BaseTextField<T extends object, V = string>(props: BaseTextField
     const previousInputSelection = useRef<InputSelection>({ start: null, end: null })
 
     const getInputValue = (event: React.SyntheticEvent<HTMLInputElement>) => {
-        const value = event.currentTarget.value
+        const value = event.currentTarget.value.replace(/\0/g, '')
         if (toModelValue)
             return toModelValue(value)
         return value === '' ? null : value as V
