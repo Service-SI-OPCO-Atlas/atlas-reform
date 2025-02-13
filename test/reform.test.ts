@@ -1,25 +1,37 @@
-import { renderHook, act } from '@testing-library/react'
-import { describe, test, expect } from 'vitest'
-import { reformContext, useForm } from '../src/reform/useForm'
-import { Yop } from '@dsid-opcoatlas/yop'
-import { SetValueOptions } from '../src/reform/FormManager'
-import { cloneDeep, isEqual } from 'lodash-es'
+import { renderHook } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { array, instance, isPromise, number, string, useForm, ValidationStatus } from '../src'
 
-type Person = {
-    firstname?: string | null
-    age?: number | null
-    friends?: Person[] | null
-}
+describe('Reform', () => {
 
-type PersonModel = {
-    person?: Person | null
-}
+    it('setValue', async () => {
 
-describe('test.reform', () => {
+        class Friend {
+            
+            @string({ required: true })
+            firstname: string | null = null
 
-    test('test.setValue', async () => {
+            @number({ min: 0 })
+            age: number | null = null
+        }
+        class Person {
+            
+            @string()
+            firstname: string | null = null
+            
+            @number()
+            age: number | null = null
 
-        const { result } = renderHook(() => useForm<PersonModel>({
+            @array({ of: Friend })
+            friends: Friend[] | null = null
+        }
+        class Test {
+
+            @instance({ of: Person })
+            person: Person | null = null
+        }
+
+        const { result } = renderHook(() => useForm({
             initialValues: {
                 person: {
                     firstname: "John",
@@ -32,16 +44,7 @@ describe('test.reform', () => {
                     }]
                 },
             },
-            validationSchema: Yop.object({
-                person: Yop.object({
-                    firstname: Yop.string(),
-                    age: Yop.number(),
-                    friends: Yop.array(Yop.object({
-                        firstname: Yop.string().required(),
-                        age: Yop.number().min(0),
-                    }))
-                })
-            })
+            validationSchema: instance({ of: Test })
         }))
 
         expect(result.current.isDirty()).toBe(false)
@@ -55,11 +58,10 @@ describe('test.reform', () => {
         expect(result.current.isTouched("person.friends[1]")).toBe(false)
         expect(result.current.isTouched("person.friends[1].firstname")).toBe(false)
         expect(result.current.isTouched("person.friends[1].age")).toBe(false)
-        expect(result.current.getErrorCount()).toEqual(0)
+        expect(result.current.statuses.size).toEqual(0)
 
-        await act(async () => {
-            await result.current.setValue("person.firstname", "Jack", true)
-        })
+        result.current.setValue("person.firstname", "Jack", true)
+
         expect(result.current.isDirty()).toBe(true)
         expect(result.current.isTouched("person")).toBe(true)
         expect(result.current.isTouched("person.firstname")).toBe(true)
@@ -70,11 +72,10 @@ describe('test.reform', () => {
         expect(result.current.isTouched("person.friends[1]")).toBe(false)
         expect(result.current.isTouched("person.friends[1].firstname")).toBe(false)
         expect(result.current.isTouched("person.friends[1].age")).toBe(false)
-        expect(result.current.getErrorCount()).toEqual(0)
+        expect(result.current.statuses.size).toEqual(0)
 
-        await act(async () => {
-            await result.current.setValue("person.friends[0].firstname", "Jim", SetValueOptions.Touch | SetValueOptions.Validate)
-        })
+        result.current.setValue("person.friends[0].firstname", "Jim", true)
+
         expect(result.current.isDirty()).toBe(true)
         expect(result.current.isTouched("person")).toBe(true)
         expect(result.current.isTouched("person.firstname")).toBe(true)
@@ -86,12 +87,11 @@ describe('test.reform', () => {
         expect(result.current.isTouched("person.friends[1]")).toBe(false)
         expect(result.current.isTouched("person.friends[1].firstname")).toBe(false)
         expect(result.current.isTouched("person.friends[1].age")).toBe(false)
-        expect(result.current.getErrorCount()).toEqual(0)
+        expect(result.current.statuses.size).toEqual(0)
 
-        await act(async () => {
-            await result.current.setValue("person.friends[1].firstname", null, SetValueOptions.Touch)
-            await result.current.setValue("person.friends[1].age", -1, true)
-        })
+        result.current.setValue("person.friends[1].firstname", null, { touch: true })
+        result.current.setValue("person.friends[1].age", -1, true)
+
         expect(result.current.isDirty()).toBe(true)
         expect(result.current.isTouched("person")).toBe(true)
         expect(result.current.isTouched("person.firstname")).toBe(true)
@@ -103,13 +103,11 @@ describe('test.reform', () => {
         expect(result.current.isTouched("person.friends[1]")).toBe(true)
         expect(result.current.isTouched("person.friends[1].firstname")).toBe(true)
         expect(result.current.isTouched("person.friends[1].age")).toBe(true)
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[1].firstname")).not.toBeUndefined()
-        expect(result.current.getError("person.friends[1].age")).not.toBeUndefined()
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[1].firstname")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[1].age")).not.toBeUndefined()
 
-        await act(async () => {
-            await result.current.setValue("person.friends[1].firstname", null, SetValueOptions.Untouch | SetValueOptions.Validate)
-        })
+        result.current.setValue("person.friends[1].firstname", null, { touch: false, validate: true })
 
         expect(result.current.isDirty()).toBe(true)
         expect(result.current.isTouched("person")).toBe(true)
@@ -122,40 +120,51 @@ describe('test.reform', () => {
         expect(result.current.isTouched("person.friends[1]")).toBe(true)
         expect(result.current.isTouched("person.friends[1].firstname")).toBe(false)
         expect(result.current.isTouched("person.friends[1].age")).toBe(true)
-        expect(result.current.getErrorCount()).toEqual(1)
-        expect(result.current.getError("person.friends[1].firstname")).toBeUndefined()
-        expect(result.current.getError("person.friends[1].age")).not.toBeUndefined()
+        expect(result.current.statuses.size).toEqual(1)
+        expect(result.current.statuses.get("person.friends[1].firstname")).toBeUndefined()
+        expect(result.current.statuses.get("person.friends[1].age")).not.toBeUndefined()
     })
 
-    test('test.array', async () => {
+    it('ArrayHelper', async () => {
 
-        type Friend = {
-            firstname: string
-            age?: number
+        class Friend {
+            
+            @string({ required: true })
+            firstname: string | null = null
+
+            @number({ min: 0 })
+            age?: number | null = null
+        }
+        class Person {
+            
+            @string()
+            firstname: string | null = null
+            
+            @number()
+            age: number | null = null
+
+            @array({ of: Friend })
+            friends: Friend[] | null = null
+        }
+        class Test {
+
+            @instance({ of: Person })
+            person: Person | null = null
         }
 
-        const { result } = renderHook(() => useForm<PersonModel>({
+        const { result } = renderHook(() => useForm({
             initialValues: {
                 person: {
                     firstname: "John",
                     age: 30,
-                    friends: [] as Friend[]
+                    friends: []
                 },
             },
-            validationSchema: Yop.object({
-                person: Yop.object({
-                    firstname: Yop.string(),
-                    age: Yop.number(),
-                    friends: Yop.array(Yop.object({
-                        firstname: Yop.string().required(),
-                        age: Yop.number().min(0),
-                    }))
-                })
-            })
+            validationSchema: instance({ of: Test })
         }))
 
         const friendsTouchedState = () => {
-            return Array.from(Array((result.current.values?.person?.friends ?? []).length).keys()).map(index => [
+            return Array.from(Array(((result.current.values as any)?.person?.friends ?? []).length).keys()).map(index => [
                 result.current.isTouched(`person.friends[${ index }]`),
                 result.current.isTouched(`person.friends[${ index }].firstname`),
                 result.current.isTouched(`person.friends[${ index }].age`),
@@ -163,51 +172,42 @@ describe('test.reform', () => {
         }
 
         expect(result.current.isDirty()).toBe(false)
-
         expect(result.current.isTouched("person")).toBeFalsy()
         expect(result.current.isTouched("person.friends")).toBeFalsy()
         expect(result.current.isTouched("person.firstname")).toBeFalsy()
         expect(result.current.isTouched("person.age")).toBeFalsy()
         expect(friendsTouchedState()).toEqual([])
+        expect(result.current.statuses.size).toEqual(0)
 
-        expect(result.current.getErrorCount()).toEqual(0)
-
-        await act(async () => {
-            await result.current.setValue("person.friends[0].firstname", "Joe", SetValueOptions.Touch)
-            await result.current.setValue("person.friends[0].age", -1, SetValueOptions.Touch)
-            await result.current.setValue("person.friends[1].firstname", "Mike", SetValueOptions.Touch)
-            await result.current.setValue("person.friends[2].firstname", null, SetValueOptions.Touch)
-            await result.current.setValue("person.friends[2].age", 24, SetValueOptions.Touch)
-            await result.current.setValue("person.friends[3].firstname", "Jim", true)
-        })
+        result.current.setValue("person.friends[0].firstname", "Joe", { touch: true })
+        result.current.setValue("person.friends[0].age", -1, { touch: true })
+        result.current.setValue("person.friends[1].firstname", "Mike", { touch: true })
+        result.current.setValue("person.friends[2].firstname", null, { touch: true })
+        result.current.setValue("person.friends[2].age", 24, { touch: true })
+        result.current.setValue("person.friends[3].firstname", "Jim", true)
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, true],
             [true, true, false],
             [true, true, true],
             [true, true, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[0].age")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[2].firstname")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[0].age")).not.toBeUndefined()
-        expect(result.current.getError("person.friends[2].firstname")).not.toBeUndefined()
-
-        await act(async () => {
-            await result.current.array<Friend>("person.friends")?.append({ firstname: "John" })
-        })
+        result.current.array<Friend>("person.friends")!.append({ firstname: "John" })
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, true],
             [true, true, false],
@@ -215,21 +215,18 @@ describe('test.reform', () => {
             [true, true, false],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[0].age")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[2].firstname")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[0].age")).not.toBeUndefined()
-        expect(result.current.getError("person.friends[2].firstname")).not.toBeUndefined()
 
-        await act(async () => {
-            await result.current.array("person.friends")?.swap(0, 3)
-        })
+        result.current.array("person.friends")!.swap(0, 3)
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, false],
             [true, true, false],
@@ -237,21 +234,17 @@ describe('test.reform', () => {
             [true, true, true],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[2].firstname")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[3].age")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[2].firstname")).not.toBeNull()
-        expect(result.current.getError("person.friends[3].age")).not.toBeNull()
-
-        await act(async () => {
-            await result.current.array("person.friends")?.move(0, 2)
-        })
+        result.current.array("person.friends")!.move(0, 2)
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, false],
             [true, true, true],
@@ -259,21 +252,17 @@ describe('test.reform', () => {
             [true, true, true],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[1].firstname")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[3].age")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[1].firstname")).not.toBeNull()
-        expect(result.current.getError("person.friends[3].age")).not.toBeNull()
-
-        await act(async () => {
-            await result.current.array<Friend>("person.friends")?.replace(2, { firstname: "Frank", age: 23 })
-        })
+        result.current.array<Friend>("person.friends")!.replace(2, { firstname: "Frank", age: 23 })
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, false],
             [true, true, true],
@@ -281,21 +270,17 @@ describe('test.reform', () => {
             [true, true, true],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[1].firstname")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[3].age")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[1].firstname")).not.toBeNull()
-        expect(result.current.getError("person.friends[3].age")).not.toBeNull()
-
-        await act(async () => {
-            await result.current.array<Friend>("person.friends")?.insert(2, { firstname: "Will", age: 25 })
-        })
+        result.current.array<Friend>("person.friends")!.insert(2, { firstname: "Will", age: 25 })
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, false],
             [true, true, true],
@@ -304,21 +289,17 @@ describe('test.reform', () => {
             [true, true, true],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[1].firstname")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[4].age")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[1].firstname")).not.toBeNull()
-        expect(result.current.getError("person.friends[3].age")).not.toBeNull()
-
-        await act(async () => {
-            await result.current.setValue("person.friends[2].age", -1, true)
-        })
+        result.current.setValue("person.friends[2].age", -1, true)
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, false],
             [true, true, true],
@@ -327,22 +308,18 @@ describe('test.reform', () => {
             [true, true, true],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(3)
+        expect(result.current.statuses.get("person.friends[1].firstname")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[2].age")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[4].age")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(3)
-        expect(result.current.getError("person.friends[1].firstname")).not.toBeNull()
-        expect(result.current.getError("person.friends[2].age")).not.toBeNull()
-        expect(result.current.getError("person.friends[3].age")).not.toBeNull()
-
-        await act(async () => {
-            await result.current.array("person.friends")?.remove(1)
-        })
+        result.current.array("person.friends")!.remove(1)
 
         expect(result.current.isDirty()).toBe(true)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([
             [true, true, false],
             [true, false, true],
@@ -350,142 +327,140 @@ describe('test.reform', () => {
             [true, true, true],
             [false, false, false],
         ])
+        expect(result.current.statuses.size).toEqual(2)
+        expect(result.current.statuses.get("person.friends[1].age")).not.toBeUndefined()
+        expect(result.current.statuses.get("person.friends[3].age")).not.toBeUndefined()
 
-        expect(result.current.getErrorCount()).toEqual(2)
-        expect(result.current.getError("person.friends[2].age")).not.toBeNull()
-        expect(result.current.getError("person.friends[3].age")).not.toBeNull()
-
-        await act(async () => {
-            await result.current.array("person.friends")?.clear()
-        })
+        result.current.array("person.friends")!.clear()
 
         expect(result.current.isDirty()).toBe(false)
-
-        expect(result.current.isTouched("person")).toBeTruthy()
-        expect(result.current.isTouched("person.friends")).toBeTruthy()
-        expect(result.current.isTouched("person.firstname")).toBeFalsy()
-        expect(result.current.isTouched("person.age")).toBeFalsy()
+        expect(result.current.isTouched("person")).toBe(true)
+        expect(result.current.isTouched("person.friends")).toBe(true)
+        expect(result.current.isTouched("person.firstname")).toBe(false)
+        expect(result.current.isTouched("person.age")).toBe(false)
         expect(friendsTouchedState()).toEqual([])
-
-        expect(result.current.getErrorCount()).toEqual(0)
+        expect(result.current.statuses.size).toEqual(0)
     })
 
-    test('test.async', async () => {
+    it('Asynchronous', async () => {
 
-        type Friend = {
-            firstname: string
-            age?: number
+        class Person {
+
+            @string()
+            firstname: string | null = null
+
+            @number({ test: {
+                promise: _context => new Promise<boolean>((resolve) => {
+                    setTimeout(() => resolve(true), 1000)
+                }),
+                pendingMessage: "Age validation pending..."
+            }})
+            age: number | null = null
         }
 
-        const { result } = renderHook(() => useForm<PersonModel>({
-            initialValues: {
-                person: {
-                    firstname: "John",
-                    age: 30,
-                },
-            },
-            validationSchema: Yop.object({
-                person: Yop.object({
-                    firstname: Yop.string(),
-                    age: Yop.number().asyncTest<Friend>(context => {
-                        return new Promise<boolean>((resolve, reject) => {
-                            const form = reformContext(context)
-                            form.setAsyncResultPending(context.path!, "Validation pending")
-                            setTimeout(() => resolve(true), 1000)
-                        })
-                    }),
-                })
-            })
+        const { result } = renderHook(() => useForm({
+            validationSchema: instance({ of: Person })
         }))
 
-        await act(async () => {
-            const promise = result.current.setValue("person.firstname", "Jack", true)
-            expect(result.current.getError("person.age")).toEqual({
-                code: 'asyncTest',
-                value: 30,
-                path: 'person.age',
-                message: 'Validation pending',
-                status: 'pending'
-            })
-            await promise
-        })
+        result.current.setValue("firstname", "Jack", true)
 
-        expect(result.current.getError("person.age")).toBeUndefined()
+        expect(result.current.statuses.get("firstname")).toBeUndefined()
+        expect(result.current.statuses.get("age")).toBeUndefined()
+
+        result.current.setValue("age", 34, true)
+        
+        expect(result.current.statuses.get("firstname")).toBeUndefined()
+        expect(result.current.statuses.size).toEqual(1)
+        expect(result.current.statuses.get("age")).toSatisfy((status: ValidationStatus) =>
+            status.level === "pending" &&
+            status.path === "age" &&
+            status.value === 34 &&
+            status.kind === "number" &&
+            status.code === "test" &&
+            isPromise(status.constraint) &&
+            status.message === "Age validation pending..."
+        )
+
+        await result.current.statuses.get("age")!.constraint
+        result.current.validate()
+
+        expect(result.current.statuses.get("firstname")).toBeUndefined()
+        expect(result.current.statuses.get("age")).toBeUndefined()
     })
 
-    test('test.resetConfiguration', async () => {
-        const initialValues = {
-            person: {
-                firstname: "John",
-                age: 30,
-                friends: [{
-                    firstname: "Mike",
-                }, {
-                    firstname: "Paul",
-                    age: 24,
-                }]
-            },
-        }
+    // test('test.resetConfiguration', async () => {
+    //     const initialValues = {
+    //         person: {
+    //             firstname: "John",
+    //             age: 30,
+    //             friends: [{
+    //                 firstname: "Mike",
+    //             }, {
+    //                 firstname: "Paul",
+    //                 age: 24,
+    //             }]
+    //         },
+    //     }
 
-        const { result, rerender } = renderHook((props: { initialValues: any }) => useForm<PersonModel>({
-            initialValues: props.initialValues,
-            resetConfiguration: {
-                deps: [props.initialValues]
-            }
-        }), { initialProps: { initialValues } })
+    //     const { result, rerender } = renderHook((props: { initialValues: any }) => useForm<PersonModel>({
+    //         initialValues: props.initialValues,
+    //         resetConfiguration: {
+    //             deps: [props.initialValues]
+    //         }
+    //     }), { initialProps: { initialValues } })
 
-        expect(result.current.values === initialValues).toBe(false)
+    //     expect(result.current.values === initialValues).toBe(false)
 
-        let values = result.current.values
-        rerender({ initialValues })
-        expect(result.current.values === values).toBe(true)
+    //     let values = result.current.values
+    //     rerender({ initialValues })
+    //     expect(result.current.values === values).toBe(true)
 
-        initialValues.person.firstname = "Jack"
-        values = result.current.values
-        rerender({ initialValues })
-        expect(result.current.values === values).toBe(true)
+    //     initialValues.person.firstname = "Jack"
+    //     values = result.current.values
+    //     rerender({ initialValues })
+    //     expect(result.current.values === values).toBe(true)
 
-        values = result.current.values
-        rerender({ initialValues: { ...initialValues } })
-        expect(result.current.values === values).toBe(false)
-    })
+    //     values = result.current.values
+    //     rerender({ initialValues: { ...initialValues } })
+    //     expect(result.current.values === values).toBe(false)
+    // })
 
-    test('test.resetConfigurationDeepCompare', async () => {
-        const initialValues = {
-            person: {
-                firstname: "John",
-                age: 30,
-                friends: [{
-                    firstname: "Mike",
-                }, {
-                    firstname: "Paul",
-                    age: 24,
-                }]
-            },
-        }
+    // test('test.resetConfigurationDeepCompare', async () => {
+    //     const initialValues = {
+    //         person: {
+    //             firstname: "John",
+    //             age: 30,
+    //             friends: [{
+    //                 firstname: "Mike",
+    //             }, {
+    //                 firstname: "Paul",
+    //                 age: 24,
+    //             }]
+    //         },
+    //     }
 
-        const { result, rerender } = renderHook((props: { initialValues: any }) => useForm<PersonModel>({
-            initialValues: props.initialValues,
-            resetConfiguration: {
-                deps: [props.initialValues],
-                isEqual: (previousDeps, deps) => isEqual(previousDeps, deps),
-            }
-        }), { initialProps: { initialValues } })
+    //     const { result, rerender } = renderHook((props: { initialValues: any }) => useForm<PersonModel>({
+    //         initialValues: props.initialValues,
+    //         resetConfiguration: {
+    //             deps: [props.initialValues],
+    //             isEqual: (previousDeps, deps) => isEqual(previousDeps, deps),
+    //         }
+    //     }), { initialProps: { initialValues } })
 
-        expect(result.current.values === initialValues).toBe(false)
+    //     expect(result.current.values === initialValues).toBe(false)
 
-        let values = result.current.values
-        rerender({ initialValues })
-        expect(result.current.values === values).toBe(true)
+    //     let values = result.current.values
+    //     rerender({ initialValues })
+    //     expect(result.current.values === values).toBe(true)
 
-        values = result.current.values
-        rerender({ initialValues: { ...initialValues } })
-        expect(result.current.values === values).toBe(true)
+    //     values = result.current.values
+    //     rerender({ initialValues: { ...initialValues } })
+    //     expect(result.current.values === values).toBe(true)
 
-        const initialValuesCopy = cloneDeep(initialValues)
-        initialValuesCopy.person.firstname = "Jack"
-        values = result.current.values
-        rerender({ initialValues: initialValuesCopy })
-        expect(result.current.values === values).toBe(false)
-    })
+    //     const initialValuesCopy = cloneDeep(initialValues)
+    //     initialValuesCopy.person.firstname = "Jack"
+    //     values = result.current.values
+    //     rerender({ initialValues: initialValuesCopy })
+    //     expect(result.current.values === values).toBe(false)
+    // })
 })

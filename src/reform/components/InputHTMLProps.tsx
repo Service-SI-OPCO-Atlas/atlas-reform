@@ -1,5 +1,5 @@
 import { DOMAttributes, InputHTMLAttributes } from "react"
-import { UseFormReturn } from "../useForm"
+import { FormManager } from "../FormManager";
 
 type HTMLInputTypeAttribute =
         | 'button'
@@ -63,7 +63,7 @@ export type InputAttributes<InputType extends HTMLInputTypeAttribute> = (
     }
 )
 
-export type ReformEvents<FieldValueType, FormObjectType extends object> = {
-    onChange?: (value: FieldValueType | null, form: UseFormReturn<FormObjectType>, parentPath?: string) => void
-    onBlur?: (value: FieldValueType | null, form: UseFormReturn<FormObjectType>, parentPath?: string) => void
+export type ReformEvents<Value> = {
+    onChange?: (value: Value | null, form: FormManager) => void
+    onBlur?: (value: Value | null, form: FormManager) => void
 }

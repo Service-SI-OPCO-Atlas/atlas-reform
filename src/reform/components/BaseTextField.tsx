@@ -1,8 +1,6 @@
-import { getFieldState } from "../useForm"
-import { useFormContext } from "../useFormContext"
-import { getParentPath } from "@dsid-opcoatlas/yop"
 import React, { InputHTMLAttributes, useRef } from "react"
 import { InputAttributes, ReformEvents } from "./InputHTMLProps"
+import { useFormField } from "../useFormField"
 
 export interface InputSelection {
     start: number | null
@@ -21,7 +19,7 @@ export type BaseTextFieldHTMLAttributes = Omit<InputAttributes<"text" | "search"
     'width'
 >
 
-export type BaseTextFieldProps<T extends object, V> = BaseTextFieldHTMLAttributes & ReformEvents<V, T> & {
+export type BaseTextFieldProps<V> = BaseTextFieldHTMLAttributes & ReformEvents<V | null> & {
     toModelValue?: (value: string) => V | null
     toTextValue?: (value: V | null) => string
     acceptInputValue?: (value: string) => boolean
@@ -41,11 +39,10 @@ export type BaseTextFieldProps<T extends object, V> = BaseTextFieldHTMLAttribute
     render: () => void
 }
 
-export function BaseTextField<T extends object, V = string>(props: BaseTextFieldProps<T, V>) {
+export function BaseTextField<Value extends string = string>(props: BaseTextFieldProps<Value>) {
 
     const { onChange, onBlur, toModelValue, toTextValue, acceptInputValue, formatDisplayedValue, formatOnEdit, render, ...inputProps } = props
-    const context = useFormContext<T>()
-    const fieldState = getFieldState<V | null>(context, props.name)
+    const { value: fieldValue, form } = useFormField<Value | null, number>(props.name)
 
     const inputRef = useRef<HTMLInputElement>(null)
     const previousInputValue = useRef('')
@@ -55,7 +52,7 @@ export function BaseTextField<T extends object, V = string>(props: BaseTextField
         const value = event.currentTarget.value.replace(/\0/g, '')
         if (toModelValue)
             return toModelValue(value)
-        return value === '' ? null : value as V
+        return value === '' ? null : value as Value
     }
 
     const internalOnSelect = (event: React.FormEvent<HTMLInputElement>) => {
@@ -95,22 +92,22 @@ export function BaseTextField<T extends object, V = string>(props: BaseTextField
     const internalOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         previousInputValue.current = event.currentTarget.value
         const value = getInputValue(event)
-        if (value !== fieldState.value) {
-            context.setValue(props.name, value)
-            context.validateAt(props.name) && render()
-            onChange?.(value, context, getParentPath(props.name) ?? undefined)
+        if (value !== fieldValue) {
+            form.setValue(props.name, value)
+            form.validateAt(props.name) && render()
+            onChange?.(value, form)
         }
     }
 
     const internalOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
         const value = getInputValue(event)
-        context.setValue(props.name, value, true)
-        onBlur?.(value, context, getParentPath(props.name) ?? undefined)
+        form.setValue(props.name, value, true)
+        onBlur?.(value, form)
     }
 
     // If this is the first render or if this input isn't currently edited
     if (inputRef.current == null || inputRef.current !== document.activeElement) {
-        const convertedValue = toTextValue?.(fieldState.value) ?? String(fieldState.value ?? '')
+        const convertedValue = toTextValue?.(fieldValue ?? null) ?? String(fieldValue ?? '')
         const value = formatDisplayedValue?.(convertedValue) ?? convertedValue
         if (inputRef.current)
             inputRef.current.value = value
