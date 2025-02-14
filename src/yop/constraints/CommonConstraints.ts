@@ -4,6 +4,10 @@ import { InternalValidationContext } from "../ValidationContext"
 
 export interface CommonConstraints<Value, Parent = unknown> {
     /**
+     * If `true`, the validation of the decorated element is skipped.
+     */
+    ignored?: Constraint<Value | null | undefined, boolean, Parent>
+    /**
      * If `true`, the property must be present in the parent object (ie: `"prop" in obj` is true).
      */
     exists?: Constraint<Value | null | undefined, boolean, Parent>

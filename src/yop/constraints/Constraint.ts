@@ -19,17 +19,18 @@ export function validateConstraint<Value, ConstraintType, Parent, Constraints = 
     isConstraintType: (value: any) => value is ConstraintType,
     validate: (value: Value, constraintValue: NonNullable<ConstraintType>) => boolean,
     defaultConstraint?: ConstraintType,
-    defaultMessage?: Message<Value, Parent>
+    defaultMessage?: Message<Value, Parent>,
+    setStatus = true
 ) {
     if (context.groups == null) {
         const constraint = constraints[name] as Constraint<Value, ConstraintType, Parent> | undefined
-        return _validateConstraint(context, constraint, isConstraintType, validate, name as string, defaultConstraint, defaultMessage)
+        return _validateConstraint(context, constraint, isConstraintType, validate, name as string, defaultConstraint, defaultMessage, setStatus)
     }
     
     const groups = Array.isArray(context.groups) ? context.groups : [context.groups]
     for (const group of groups) {
         const constraint = (group == null ? constraints[name] : (constraints as any).groups?.[group]?.[name]) as Constraint<Value, ConstraintType, Parent> | undefined
-        if (!_validateConstraint(context, constraint, isConstraintType, validate, name as string, defaultConstraint, defaultMessage))
+        if (!_validateConstraint(context, constraint, isConstraintType, validate, name as string, defaultConstraint, defaultMessage, setStatus))
             return false
     }
     return true
@@ -42,8 +43,12 @@ function _validateConstraint<Value, ConstraintType, Parent>(
     validate: (value: Value, constraintValue: NonNullable<ConstraintType>) => boolean,
     errorCode: string,
     defaultConstraint?: ConstraintType,
-    defaultMessage?: Message<Value, Parent>
+    defaultMessage?: Message<Value, Parent>,
+    setStatus = true
 ) {
+    if (constraint == null && defaultConstraint == null)
+        return true
+
     let message: ConstraintMessage | undefined = undefined
     let level: Level = "error"
 
@@ -74,6 +79,6 @@ function _validateConstraint<Value, ConstraintType, Parent>(
     return (
         constraint == null ||
         validate(context.value as Value, constraint as NonNullable<ConstraintType>) ||
-        context.setStatus(errorCode, constraint, message, level) == null
+        (setStatus === true && context.setStatus(errorCode, constraint, message, level) == null)
     )
 }

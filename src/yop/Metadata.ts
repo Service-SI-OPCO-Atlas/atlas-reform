@@ -82,7 +82,7 @@ export function fieldValidationDecorator<
             fields[fieldName] = {} as InternalCommonConstraints
 
         const validate = (context: InternalValidationContext<any, any>, constraints: Constraints) =>  {
-            if (context.ignored())
+            if (context.ignored() || !validateConstraint(context, constraints, "ignored", isBoolean, (_, constraint) => constraint === false, undefined, undefined, false))
                 return true
             if (!validateCommonConstraints(context, constraints))
                 return false

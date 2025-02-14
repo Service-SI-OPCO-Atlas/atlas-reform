@@ -97,7 +97,7 @@ describe("Yop", () => {
 
         it("string.undefined", () => {
             expect(Yop.validate(undefined, string({ exists: true }))).toEqual([])
-            expect(Yop.validate(undefined, string({ defined: true }))).toEqual([{
+            expect(Yop.validate(undefined, string({ defined: true, ignored: false }))).toEqual([{
                 level: "error",
                 path: "",
                 value: undefined,
@@ -106,6 +106,7 @@ describe("Yop", () => {
                 constraint: true,
                 message: "Required field"
             }])
+            expect(Yop.validate(undefined, string({ defined: true, ignored: true }))).toEqual([])
             expect(Yop.validate(undefined, string({ notnull: true }))).toEqual([])
             expect(Yop.validate(undefined, string({ required: true }))).toEqual([{
                 level: "error",
