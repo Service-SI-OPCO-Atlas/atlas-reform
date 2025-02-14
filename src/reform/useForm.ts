@@ -8,6 +8,7 @@ export type FormConfig<T> = {
     readonly initialValues?: DeepPartial<T> | null
     readonly validationSchema?: ((_: unknown, context: ClassFieldDecoratorContext<unknown, T>) => void)
     readonly onSubmit?: (form: FormManager) => void
+    readonly dispatchEvent?: boolean
 }
 
 export function useForm<T>(config: FormConfig<T>): FormManager {

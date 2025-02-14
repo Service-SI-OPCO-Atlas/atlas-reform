@@ -11,11 +11,13 @@ export interface ReformValidationSettings extends ValidationSettings {
     method: "validate" | "validateAt" | "constraintsAt"
 }
 
-export type SetValueOptions = boolean | {
+export type SetValueOptionsObject = {
     touch?: boolean
     validate?: boolean
     propagate?: boolean
 }
+
+export type SetValueOptions = boolean | SetValueOptionsObject
 
 export interface FormManager extends ValidationForm {
 
@@ -36,9 +38,32 @@ export interface FormManager extends ValidationForm {
     submit(e: FormEvent<HTMLFormElement>): void
 
     array<T = any>(path: string): ArrayHelper<T> | undefined
+
+    addReformEventListener(listener: EventListener): void
+    removeReformEventListener(listener: EventListener): void
 }
 
 const UNSET_VALUES = {}
+
+const ReformSetValueEventType = 'reform:set-value'
+export interface ReformSetValueEvent<T = any> extends CustomEvent<{
+    readonly form: FormManager,
+    readonly path: string,
+    readonly previousValue: T,
+    readonly value: T,
+    readonly options: SetValueOptionsObject
+}> {
+}
+
+function createReformSetValueEvent<T = any>(
+    form: FormManager,
+    path: string,
+    previousValue: T,
+    value: T,
+    options: SetValueOptionsObject
+): ReformSetValueEvent<T> {
+    return new CustomEvent(ReformSetValueEventType, { detail: { form, path, previousValue, value, options }})
+}
 
 export class InternalFormManager<T> implements FormManager {
     
@@ -52,10 +77,21 @@ export class InternalFormManager<T> implements FormManager {
     private _submitting = false
     private _submitted = false
 
+    private eventTarget = new EventTarget()
+
     htmlForm?: HTMLFormElement
 
     constructor(readonly render: () => void) {
     }
+
+    addReformEventListener(listener: EventListener) {
+        this.eventTarget.addEventListener(ReformSetValueEventType, listener)
+    }
+
+    removeReformEventListener(listener: EventListener) {
+        this.eventTarget.removeEventListener(ReformSetValueEventType, listener)
+    }
+
 
     get submitted() {
         return this._submitted
@@ -99,7 +135,7 @@ export class InternalFormManager<T> implements FormManager {
             return undefined
         this._values = result.root
 
-        const { touch, validate } = typeof options === "boolean" ? { validate: options, touch: undefined } : options ?? {}
+        const { touch, validate, propagate } = typeof options === "boolean" ? { validate: options, touch: undefined, propagate: undefined } : options ?? {}
         if (touch === false)
             this.untouch(path)
         else if (validate || touch)
@@ -108,6 +144,18 @@ export class InternalFormManager<T> implements FormManager {
         if (validate) {
             this.validate()
             this.render()
+        }
+
+        if (this.config.dispatchEvent !== false && propagate === true) {
+            setTimeout(() => {
+                this.eventTarget.dispatchEvent(createReformSetValueEvent(
+                    this,
+                    typeof path === "string" ? path : joinPath(path),
+                    result.previousValue,
+                    value,
+                    { touch, validate, propagate }
+                ))
+            })
         }
 
         return result
