@@ -317,6 +317,7 @@ export class FormManager<T extends object> {
                 if (valid)
                     _this.formState.props.onSubmit?.(context)
                 else {
+                    console.error("Validation errors", _this.errors.values())
                     const firstErrorKey = _this.errors.paths()?.[0]
                     const element = window.document.getElementById(firstErrorKey)
                     if (element) {
