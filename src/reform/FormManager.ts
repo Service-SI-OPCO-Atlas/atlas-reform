@@ -319,7 +319,7 @@ export class FormManager<T extends object> {
                 else {
                     console.error("Validation errors", _this.errors.values())
                     const firstErrorKey = _this.errors.paths()?.[0]
-                    const element = window.document.getElementById(firstErrorKey)
+                    const element = window.document.querySelector(`[name="${firstErrorKey}"]`) as HTMLElement | null
                     if (element) {
                         setTimeout(() => {
                             element.focus()
